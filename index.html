@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ключевые преимущества</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Ключевые преимущества</h1>
+            <div class="round-counter">Раунд: <span id="current-round">1</span>/10</div>
+        </div>
+
+        <div class="game-area">
+            <!-- ДОБАВЛЕНО: Блок описания раунда -->
+            <div class="round-description" id="round-description">
+                Укажите 3 главных преимущества Tecno Spark 40
+            </div>
+            
+            <div class="empty-cells" id="empty-cells">
+                <div class="empty-cell" data-cell="0"></div>
+                <div class="empty-cell" data-cell="1"></div>
+                <div class="empty-cell" data-cell="2"></div>
+            </div>
+            
+            <div class="options" id="options">
+                <!-- Варианты появятся здесь -->
+            </div>
+        </div>
+
+        <button class="next-btn" id="next-btn">Следующий раунд</button>
+    </div>
+
+    <!-- Модальное окно результатов -->
+    <div class="modal" id="results-modal">
+        <div class="modal-content">
+            <h2>Результаты</h2>
+            <p id="results-text"></p>
+            <button id="ok-btn">OK</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно лидеров -->
+    <div class="modal" id="leaders-modal">
+        <div class="modal-content">
+            <h2>Таблица лидеров</h2>
+            <div id="leaders-table"></div>
+            <button id="restart-btn" style="display: none;">Пройти заново</button>
+            <button id="close-btn">Закрыть</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "telegram-key-advantages-game",
+  "version": "1.0.0",
+  "description": "Игра Ключевые преимущества для Telegram",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
