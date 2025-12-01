@@ -65,7 +65,7 @@ class KeyAdvantagesGame {
                 description: "Ключевые преимущества Tecno MEGAPAD PRO",
                 correct: [0, 4, 5],
                 options: [
-                    "2K IPS экран 12” 90 Гц", "2K OLED экран 12'' 120 Гц", "Bluetooth 5.2",
+                    "2K IPS экран 12" 90 Гц", "2K OLED экран 12'' 120 Гц", "Bluetooth 5.2",
                     "Wi-Fi 5 ГГц", "LTE-связь", "TECNO AI"
                 ]
             },
@@ -82,7 +82,7 @@ class KeyAdvantagesGame {
                 correct: [2, 3, 5],
                 options: [
                     "Стереодинамики", "ИК-порт", "Соотношение сторон 21:9",
-                    "Частота кадров 180 Гц", "Частота кадров 144 Гц", "Изогнутый экран диагональю 34”"
+                    "Частота кадров 180 Гц", "Частота кадров 144 Гц", "Изогнутый экран диагональю 34""
                 ]
             },
             {
@@ -478,9 +478,6 @@ class KeyAdvantagesGame {
                 }
             }
         });
-        
-        // НЕ подсвечиваем правильные ответы в списке вариантов
-        // Только те, что уже выбраны в ячейках
     }
 
     // Метод для очистки подсветки
@@ -513,86 +510,15 @@ class KeyAdvantagesGame {
         // Вычисляем очки за текущий раунд
         this.calculateRoundScore();
         
-        // Показываем сообщение о результате раунда
-        this.showRoundResult();
-        
         // Увеличиваем задержку до 4 секунд перед переходом
         setTimeout(() => {
             if (this.currentRound === 9) {
                 this.finishGame();
             } else {
-                this.clearRoundResult();
                 this.clearHighlighting();
                 this.startRound(this.currentRound + 1);
             }
         }, 4000); // 4 секунды задержки
-    }
-
-    // Показываем результат текущего раунда
-    showRoundResult() {
-        const actualRound = this.roundsOrder[this.currentRound];
-        const correctAnswers = this.roundsData[actualRound].correct;
-        const userAnswers = this.userAnswers[this.currentRound] || [];
-        
-        let correctCount = 0;
-        userAnswers.forEach(answer => {
-            if (correctAnswers.includes(answer)) {
-                correctCount++;
-            }
-        });
-        
-        // Создаем сообщение о результате раунда
-        const roundResultDiv = document.createElement('div');
-        roundResultDiv.id = 'round-result';
-        roundResultDiv.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 1000;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            border: 3px solid ${correctCount === 3 ? '#28a745' : '#ffc107'};
-            min-width: 300px;
-        `;
-        
-        let resultText = '';
-        if (correctCount === 3) {
-            resultText = `🎉 Отлично! Все 3 ответа верны!`;
-            roundResultDiv.style.color = '#28a745';
-        } else if (correctCount === 2) {
-            resultText = `👍 Хорошо! ${correctCount} из 3 ответов верны`;
-            roundResultDiv.style.color = '#17a2b8';
-        } else if (correctCount === 1) {
-            resultText = `👌 Неплохо! ${correctCount} из 3 ответов верен`;
-            roundResultDiv.style.color = '#ffc107';
-        } else {
-            resultText = `😕 Пока не получилось. Попробуйте в следующем раунде!`;
-            roundResultDiv.style.color = '#dc3545';
-        }
-        
-        roundResultDiv.innerHTML = `
-            <div style="margin-bottom: 10px;">Раунд ${this.currentRound + 1}</div>
-            <div>${resultText}</div>
-            <div style="margin-top: 10px; font-size: 18px; color: #666;">
-                Переход через 4 секунды...
-            </div>
-        `;
-        
-        document.body.appendChild(roundResultDiv);
-    }
-
-    // Очищаем сообщение о результате раунда
-    clearRoundResult() {
-        const roundResult = document.getElementById('round-result');
-        if (roundResult) {
-            document.body.removeChild(roundResult);
-        }
     }
 
     // Метод для подсчета очков за текущий раунд
@@ -813,7 +739,6 @@ class KeyAdvantagesGame {
         document.getElementById('results-modal').style.display = 'none';
         document.getElementById('restart-btn').style.display = 'none';
         
-        this.clearRoundResult();
         this.clearHighlighting();
         this.startRound(0);
     }
