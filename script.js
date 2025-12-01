@@ -6,6 +6,7 @@ class KeyAdvantagesGame {
         this.userAnswers = [];
         this.isDragging = false;
         this.isMobile = this.checkMobile();
+        this.showLeadersFromGame = false; // Флаг для отслеживания откуда вызвана таблица лидеров
         
         // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ
         this.roundsData = [
@@ -137,19 +138,19 @@ class KeyAdvantagesGame {
 
     setupEventListeners() {
         document.getElementById('next-btn').addEventListener('click', () => this.nextRound());
-        document.getElementById('ok-btn').addEventListener('click', () => this.showLeaders());
-        document.getElementById('restart-btn').addEventListener('click', () => this.restartGame());
-        document.getElementById('close-btn').addEventListener('click', () => {
-            if (this.tg) {
-                this.tg.close();
-            } else {
-                alert('Игра завершена!');
-            }
+        document.getElementById('ok-btn').addEventListener('click', () => {
+            this.showLeadersFromGame = true; // Устанавливаем флаг, что показ из конца игры
+            this.showLeaders();
         });
+        document.getElementById('restart-btn').addEventListener('click', () => this.restartGame());
+        
+        // ДОБАВЛЕНО: Универсальный обработчик для кнопки закрытия
+        document.getElementById('close-btn').addEventListener('click', () => this.handleCloseButton());
         
         // ДОБАВЛЕНО: Обработчик для кнопки таблицы лидеров
         document.getElementById('leaders-btn').addEventListener('click', () => {
-            this.showLeaders(false); // false - не из конца игры
+            this.showLeadersFromGame = false; // Устанавливаем флаг, что показ из кнопки
+            this.showLeaders();
         });
         
         this.setupDragAndDrop();
@@ -303,6 +304,23 @@ class KeyAdvantagesGame {
         // Обновляем ответы
         this.saveRoundAnswers();
     }
+    
+    // ДОБАВЛЕНО: Обработчик кнопки закрытия в зависимости от контекста
+    handleCloseButton() {
+        const leadersModal = document.getElementById('leaders-modal');
+        
+        if (this.showLeadersFromGame) {
+            // Если показ из конца игры - закрываем игру
+            if (this.tg) {
+                this.tg.close();
+            } else {
+                alert('Игра завершена!');
+            }
+        } else {
+            // Если показ из кнопки - просто закрываем модальное окно
+            leadersModal.style.display = 'none';
+        }
+    }
 
     startRound(roundIndex) {
         this.currentRound = roundIndex;
@@ -442,28 +460,35 @@ class KeyAdvantagesGame {
         }
     }
 
-    async showLeaders(fromEndGame = true) {
-        if (fromEndGame) {
-            document.getElementById('results-modal').style.display = 'none';
-        }
+    async showLeaders() {
+        // Закрываем окно результатов, если оно открыто
+        document.getElementById('results-modal').style.display = 'none';
         
         try {
             const leaders = await this.getLeaders();
             this.displayLeaders(leaders);
             document.getElementById('leaders-modal').style.display = 'block';
             
-            // Показываем кнопку "Пройти заново" если не все ответы правильные И вызвано из конца игры
-            if (fromEndGame && this.score < 10) {
-                document.getElementById('restart-btn').style.display = 'inline-block';
+            // Показываем кнопку "Пройти заново" если вызывается из конца игры и не все ответы правильные
+            const restartBtn = document.getElementById('restart-btn');
+            if (this.showLeadersFromGame && this.score < 10) {
+                restartBtn.style.display = 'inline-block';
             } else {
-                document.getElementById('restart-btn').style.display = 'none';
+                restartBtn.style.display = 'none';
             }
         } catch (error) {
             console.error('Ошибка загрузки таблицы лидеров:', error);
             // Показываем пустую таблицу при ошибке
             this.displayLeaders([]);
             document.getElementById('leaders-modal').style.display = 'block';
-            document.getElementById('restart-btn').style.display = fromEndGame && this.score < 10 ? 'inline-block' : 'none';
+            
+            // Управляем видимостью кнопки "Пройти заново"
+            const restartBtn = document.getElementById('restart-btn');
+            if (this.showLeadersFromGame && this.score < 10) {
+                restartBtn.style.display = 'inline-block';
+            } else {
+                restartBtn.style.display = 'none';
+            }
         }
     }
 
