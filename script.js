@@ -84,11 +84,11 @@ class KeyAdvantagesGame {
                 ]
             },
             {
-                description: "Ключевые преимущества Tecno Camon 30S",
+                description: "Ключевые преимущества Tecno MEGA MINI GAMING G1",
                 correct: [0, 1, 5],
                 options: [
-                    "Камера Sony 50 Мп", "Изогнутый AMOLED экран", "Игровой режим",
-                    "Автояркость", "Высокая автономность", "Защита глаз"
+                    "Мощный процессор Intel 13 поколения", "Видеокарта NVIDIA GeForce RTX 4060 8Гб", "Игровой режим",
+                    "Видеокарта NVIDIA GeForce RTX 4060 4Гб", "Тонкий и лёгкий корпус", "Компактный корпус с RGB-подсветкой"
                 ]
             }
         ];
