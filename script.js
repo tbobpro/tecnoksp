@@ -5,15 +5,11 @@ class KeyAdvantagesGame {
         this.roundsOrder = [];
         this.userAnswers = [];
         this.isDragging = false;
-        this.touchStartTime = 0;
-        this.touchStartElement = null;
-        this.longPressTimer = null;
-        this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        this.lastTappedElement = null;
-        this.lastTapTime = 0;
+        this.isMobile = this.checkMobile();
         
         // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ
         this.roundsData = [
+            // Раунд 1
             {
                 description: "Укажите 3 главных преимущества Tecno Spark 40",
                 correct: [0, 2, 4],
@@ -22,6 +18,7 @@ class KeyAdvantagesGame {
                     "NFC", "Искусственный интеллект", "Водозащита"
                 ]
             },
+            // Раунд 2
             {
                 description: "Выберите 3 ключевых ключевых преимущества смартфонов Tecno Camon 40",
                 correct: [1, 3, 4],
@@ -30,6 +27,7 @@ class KeyAdvantagesGame {
                     "Flashsnap", "КАМЕРА SONY 50 МП", "OLED-дисплей"
                 ]
             },
+            // Раунд 3
             {
                 description: "Основные преимущества Tecno Spark Slim",
                 correct: [0, 1, 2],
@@ -38,6 +36,7 @@ class KeyAdvantagesGame {
                     "IP64", "Аккумулятор 5160мАч", "Основная камера 50 Мп"
                 ]
             },
+            // Раунд 4
             {
                 description: "Основные преимущества Tecno Megabook S14",
                 correct: [3, 4, 5],
@@ -46,6 +45,7 @@ class KeyAdvantagesGame {
                     "2.8K OLED Дисплей", "Тонкий и лёгкий корпус", "Tecno AI"
                 ]
             },
+            // Раунд 5
             {
                 description: "Ключевые преимущества Tecno POVA 7",
                 correct: [0, 3, 5],
@@ -54,6 +54,7 @@ class KeyAdvantagesGame {
                     "Надёжный сигнал", "Режим игрофикации", "Улучшенная навигация"
                 ]
             },
+            // Раунд 6
             {
                 description: "Ключевые преимущества Tecno Megabook T14 Air",
                 correct: [1, 2, 4],
@@ -62,6 +63,7 @@ class KeyAdvantagesGame {
                     "Яркость 400 нит", "Быстрый интернет с Wi-Fi 6E", "HDR"
                 ]
             },
+            // Раунд 7
             {
                 description: "Ключевые преимущества Tecno MEGAPAD PRO",
                 correct: [0, 4, 5],
@@ -70,6 +72,7 @@ class KeyAdvantagesGame {
                     "Wi-Fi 5 ГГц", "LTE-связь", "TECNO AI"
                 ]
             },
+            // Раунд 8
             {
                 description: "Ключевые преимущества Tecno MEGAPAD 11",
                 correct: [1, 3, 4],
@@ -78,14 +81,16 @@ class KeyAdvantagesGame {
                     "Большой объём памяти 256 Гб + 8 Гб", "Емкий аккумулятор 8000 мАч", "Ёмкий аккумулятор 8800 мАч"
                 ]
             },
+            // Раунд 9
             {
                 description: "Ключевые преимущества монитора Tecno Megaview GT",
                 correct: [2, 3, 5],
                 options: [
                     "Стереодинамики", "ИК-порт", "Соотношение сторон 21:9",
-                    "Частота кадров 180 Гц", "Частота кадров 144 Гц", "Изогнутый экран диагональю 34""
+                    "Частота кадров 180 Гц", "Частота кадров 144 Гц", "Изогнутый экран диагональю 34”"
                 ]
             },
+            // Раунд 10
             {
                 description: "Ключевые преимущества Tecno Camon 30S",
                 correct: [0, 1, 5],
@@ -97,6 +102,11 @@ class KeyAdvantagesGame {
         ];
 
         this.init();
+    }
+
+    checkMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               window.innerWidth <= 768;
     }
 
     init() {
@@ -139,37 +149,28 @@ class KeyAdvantagesGame {
         
         // ДОБАВЛЕНО: Обработчик для кнопки таблицы лидеров
         document.getElementById('leaders-btn').addEventListener('click', () => {
-            this.showLeaders();
+            this.showLeaders(false); // false - не из конца игры
         });
+        
+        this.setupDragAndDrop();
+        this.setupTouchControls();
     }
 
     setupDragAndDrop() {
         const optionsContainer = document.getElementById('options');
         const emptyCells = document.querySelectorAll('.empty-cell');
 
-        // Удаляем старые обработчики
-        const newOptionsContainer = optionsContainer.cloneNode(false);
-        while (optionsContainer.firstChild) {
-            newOptionsContainer.appendChild(optionsContainer.firstChild);
-        }
-        optionsContainer.parentNode.replaceChild(newOptionsContainer, optionsContainer);
-
-        const newOptionsContainerRef = document.getElementById('options');
-
-        // Десктоп: drag and drop
-        newOptionsContainerRef.addEventListener('dragstart', (e) => {
-            const option = e.target.closest('.option');
-            if (option && !option.classList.contains('used')) {
-                option.classList.add('dragging');
+        optionsContainer.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('option') && !e.target.classList.contains('used')) {
+                e.target.classList.add('dragging');
                 this.isDragging = true;
-                e.dataTransfer.setData('text/plain', option.getAttribute('data-option'));
+                e.dataTransfer.setData('text/plain', e.target.getAttribute('data-option'));
             }
         });
 
-        newOptionsContainerRef.addEventListener('dragend', (e) => {
-            const option = e.target.closest('.option');
-            if (option) {
-                option.classList.remove('dragging');
+        optionsContainer.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('option')) {
+                e.target.classList.remove('dragging');
                 this.isDragging = false;
             }
         });
@@ -191,196 +192,116 @@ class KeyAdvantagesGame {
                 const optionIndex = e.dataTransfer.getData('text/plain');
                 const option = document.querySelector(`.option[data-option="${optionIndex}"]`);
                 
-                this.placeOptionInCell(option, cell);
+                this.addOptionToCell(option, cell);
             });
-        });
-
-        // Мобильные устройства: touch события
-        if (this.isMobile) {
-            this.setupTouchEvents(newOptionsContainerRef, emptyCells);
-        }
-
-        // Двойной клик для возврата опции
-        this.setupDoubleClickReturn();
-    }
-
-    setupTouchEvents(optionsContainer, emptyCells) {
-        let touchStartElement = null;
-        let touchStartTime = 0;
-        let touchStartPos = { x: 0, y: 0 };
-        const TOUCH_MOVE_THRESHOLD = 10;
-
-        optionsContainer.addEventListener('touchstart', (e) => {
-            const option = e.target.closest('.option');
-            if (!option || option.classList.contains('used')) return;
-
-            e.preventDefault();
-            touchStartElement = option;
-            touchStartTime = Date.now();
-            touchStartPos = {
-                x: e.touches[0].clientX,
-                y: e.touches[0].clientY
-            };
-
-            option.classList.add('touch-active');
-
-            // Обработка долгого нажатия для возврата (если элемент уже в ячейке)
-            if (option.parentElement.classList.contains('empty-cell')) {
-                this.longPressTimer = setTimeout(() => {
-                    this.returnOptionToPlace(option);
-                }, 500);
-            }
-        });
-
-        optionsContainer.addEventListener('touchmove', (e) => {
-            if (!touchStartElement) return;
             
-            clearTimeout(this.longPressTimer);
-
-            const touch = e.touches[0];
-            const deltaX = Math.abs(touch.clientX - touchStartPos.x);
-            const deltaY = Math.abs(touch.clientY - touchStartPos.y);
-
-            if (deltaX > TOUCH_MOVE_THRESHOLD || deltaY > TOUCH_MOVE_THRESHOLD) {
-                touchStartElement.classList.remove('touch-active');
-            }
-        });
-
-        optionsContainer.addEventListener('touchend', (e) => {
-            clearTimeout(this.longPressTimer);
-
-            if (!touchStartElement) return;
-
-            const touch = e.changedTouches[0];
-            const deltaX = Math.abs(touch.clientX - touchStartPos.x);
-            const deltaY = Math.abs(touch.clientY - touchStartPos.y);
-            const touchDuration = Date.now() - touchStartTime;
-
-            touchStartElement.classList.remove('touch-active');
-
-            // Быстрое касание для перетаскивания
-            if (touchDuration < 300 && deltaX < TOUCH_MOVE_THRESHOLD && deltaY < TOUCH_MOVE_THRESHOLD) {
-                if (touchStartElement.parentElement.classList.contains('options')) {
-                    // Находим первую свободную ячейку
-                    const emptyCell = this.findEmptyCell();
-                    if (emptyCell) {
-                        this.placeOptionInCell(touchStartElement, emptyCell);
-                    }
-                } else if (touchStartElement.parentElement.classList.contains('empty-cell')) {
-                    // Двойное нажатие для возврата
-                    if (this.lastTappedElement === touchStartElement && Date.now() - this.lastTapTime < 300) {
-                        this.returnOptionToPlace(touchStartElement);
-                    } else {
-                        this.lastTappedElement = touchStartElement;
-                        this.lastTapTime = Date.now();
-                    }
+            // ДОБАВЛЕНО: Обработчик для удаления варианта перетаскиванием из ячейки
+            cell.addEventListener('dragover', (e) => {
+                if (cell.children.length > 0) {
+                    e.preventDefault();
                 }
-            }
+            });
 
-            touchStartElement = null;
+            cell.addEventListener('drop', (e) => {
+                if (cell.children.length > 0) {
+                    e.preventDefault();
+                    this.removeOptionFromCell(cell.firstChild);
+                }
+            });
         });
-
-        // Обработка пустых ячеек для touch
+    }
+    
+    // ДОБАВЛЕНО: Настройка сенсорного управления для мобильных устройств
+    setupTouchControls() {
+        const optionsContainer = document.getElementById('options');
+        const emptyCells = document.querySelectorAll('.empty-cell');
+        
+        // Клик по варианту для добавления
+        optionsContainer.addEventListener('click', (e) => {
+            if (this.isMobile && e.target.classList.contains('option') && 
+                !e.target.classList.contains('used')) {
+                this.addOptionToEmptyCell(e.target);
+            }
+        });
+        
+        // Клик по варианту в ячейке для удаления
         emptyCells.forEach(cell => {
-            cell.addEventListener('touchstart', (e) => {
-                const option = cell.querySelector('.option');
-                if (option) {
-                    touchStartElement = option;
-                    touchStartTime = Date.now();
-                    touchStartPos = {
-                        x: e.touches[0].clientX,
-                        y: e.touches[0].clientY
-                    };
-
-                    // Обработка долгого нажатия для возврата
-                    this.longPressTimer = setTimeout(() => {
-                        this.returnOptionToPlace(option);
-                    }, 500);
+            cell.addEventListener('click', (e) => {
+                if (this.isMobile && e.target.classList.contains('option')) {
+                    this.removeOptionFromCell(e.target);
                 }
             });
-
-            cell.addEventListener('touchend', () => {
-                clearTimeout(this.longPressTimer);
-                touchStartElement = null;
+            
+            // Двойной тап для быстрого удаления
+            let tapCount = 0;
+            let tapTimer;
+            
+            cell.addEventListener('touchstart', (e) => {
+                if (e.target.classList.contains('option')) {
+                    tapCount++;
+                    if (tapCount === 1) {
+                        tapTimer = setTimeout(() => {
+                            tapCount = 0;
+                        }, 300);
+                    } else if (tapCount === 2) {
+                        clearTimeout(tapTimer);
+                        tapCount = 0;
+                        this.removeOptionFromCell(e.target);
+                    }
+                }
             });
         });
     }
-
-    setupDoubleClickReturn() {
-        const emptyCells = document.getElementById('empty-cells');
-        emptyCells.addEventListener('dblclick', (e) => {
-            const option = e.target.closest('.option');
-            if (option && option.parentElement.classList.contains('empty-cell')) {
-                this.returnOptionToPlace(option);
+    
+    // ДОБАВЛЕНО: Метод для добавления варианта в первую свободную ячейку
+    addOptionToEmptyCell(option) {
+        const emptyCells = document.querySelectorAll('.empty-cell');
+        for (let cell of emptyCells) {
+            if (cell.children.length === 0) {
+                this.addOptionToCell(option, cell);
+                break;
             }
-        });
+        }
     }
-
-    placeOptionInCell(option, cell) {
-        if (!option || !cell || cell.hasChildNodes() || option.classList.contains('used')) return;
-
+    
+    // ДОБАВЛЕНО: Метод для добавления варианта в ячейку
+    addOptionToCell(option, cell) {
+        if (!cell || cell.hasChildNodes() || option.classList.contains('used')) {
+            return;
+        }
+        
         const optionClone = option.cloneNode(true);
-        optionClone.classList.remove('dragging', 'touch-active');
-        optionClone.draggable = false;
-        optionClone.style.cursor = 'default';
+        optionClone.classList.remove('dragging');
+        optionClone.draggable = !this.isMobile; // Отключаем перетаскивание на мобильных
+        optionClone.style.cursor = this.isMobile ? 'pointer' : 'default';
         cell.appendChild(optionClone);
         cell.classList.add('filled');
-
-        // Добавляем кнопку удаления
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'remove-btn';
-        removeBtn.innerHTML = '×';
-        removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.returnOptionToPlace(optionClone);
-        });
-        cell.appendChild(removeBtn);
-
+        
         option.classList.add('used');
         option.draggable = false;
-
-        // Показываем кнопку удаления при наведении на десктопе
-        if (!this.isMobile) {
-            cell.addEventListener('mouseenter', () => {
-                removeBtn.style.display = 'block';
-            });
-            cell.addEventListener('mouseleave', () => {
-                removeBtn.style.display = 'none';
-            });
-        }
+        
+        // Обновляем ответы
+        this.saveRoundAnswers();
     }
-
-    returnOptionToPlace(option) {
-        const cell = option.parentElement;
+    
+    // ДОБАВЛЕНО: Метод для удаления варианта из ячейки
+    removeOptionFromCell(optionClone) {
+        const cell = optionClone.parentElement;
         if (!cell || !cell.classList.contains('empty-cell')) return;
-
-        const optionIndex = option.getAttribute('data-option');
+        
+        const optionIndex = optionClone.getAttribute('data-option');
         const originalOption = document.querySelector(`.option[data-option="${optionIndex}"]`);
         
         if (originalOption) {
             originalOption.classList.remove('used');
-            originalOption.classList.add('removing');
-            originalOption.draggable = true;
-            
-            // Анимация возврата
-            setTimeout(() => {
-                originalOption.classList.remove('removing');
-            }, 300);
+            originalOption.draggable = !this.isMobile;
         }
-
-        // Удаляем кнопку удаления
-        const removeBtn = cell.querySelector('.remove-btn');
-        if (removeBtn) {
-            removeBtn.remove();
-        }
-
-        option.remove();
+        
+        cell.removeChild(optionClone);
         cell.classList.remove('filled');
-    }
-
-    findEmptyCell() {
-        const emptyCells = document.querySelectorAll('.empty-cell:not(.filled)');
-        return emptyCells[0] || null;
+        
+        // Обновляем ответы
+        this.saveRoundAnswers();
     }
 
     startRound(roundIndex) {
@@ -389,6 +310,8 @@ class KeyAdvantagesGame {
         const roundData = this.roundsData[actualRound];
         
         document.getElementById('current-round').textContent = roundIndex + 1;
+        
+        // ОБНОВЛЕНИЕ: Добавляем отображение описания раунда
         document.getElementById('round-description').textContent = roundData.description;
         
         this.updateOptions(roundData.options);
@@ -409,21 +332,32 @@ class KeyAdvantagesGame {
         options.forEach((option, index) => {
             const optionElement = document.createElement('div');
             optionElement.className = 'option';
-            optionElement.draggable = true;
+            optionElement.draggable = !this.isMobile; // Отключаем перетаскивание на мобильных
             optionElement.textContent = option;
             optionElement.setAttribute('data-option', index);
+            
+            // Добавляем стиль для мобильных устройств
+            if (this.isMobile) {
+                optionElement.style.cursor = 'pointer';
+                optionElement.style.touchAction = 'manipulation';
+            }
+            
             optionsContainer.appendChild(optionElement);
         });
-        
-        // Переустанавливаем обработчики
-        this.setupDragAndDrop();
     }
 
     clearEmptyCells() {
         const emptyCells = document.querySelectorAll('.empty-cell');
         emptyCells.forEach(cell => {
-            cell.classList.remove('filled', 'hovered');
+            cell.classList.remove('filled');
             cell.innerHTML = '';
+        });
+
+        // Сбрасываем все варианты
+        const options = document.querySelectorAll('.option');
+        options.forEach(option => {
+            option.classList.remove('used');
+            option.draggable = !this.isMobile; // Учитываем мобильные устройства
         });
     }
 
@@ -456,14 +390,16 @@ class KeyAdvantagesGame {
         let score = 0;
         
         this.userAnswers.forEach((answer, roundIndex) => {
-            if (!answer || answer.length === 0) return;
+            if (!answer) return;
             
             const actualRound = this.roundsOrder[roundIndex];
             const correctAnswers = this.roundsData[actualRound].correct;
             
+            // Сортируем для сравнения
             const sortedAnswer = [...answer].sort();
             const sortedCorrect = [...correctAnswers].sort();
             
+            // Проверяем совпадение массивов
             if (sortedAnswer.length === sortedCorrect.length && 
                 sortedAnswer.every((val, idx) => val === sortedCorrect[idx])) {
                 score++;
@@ -480,6 +416,7 @@ class KeyAdvantagesGame {
             `Правильно отвечено: ${this.score} из 10`;
         document.getElementById('results-modal').style.display = 'block';
         
+        // Сохраняем результат на сервер
         await this.saveResult();
     }
 
@@ -505,40 +442,41 @@ class KeyAdvantagesGame {
         }
     }
 
-    async showLeaders() {
+    async showLeaders(fromEndGame = true) {
+        if (fromEndGame) {
+            document.getElementById('results-modal').style.display = 'none';
+        }
+        
         try {
             const leaders = await this.getLeaders();
             this.displayLeaders(leaders);
             document.getElementById('leaders-modal').style.display = 'block';
             
-            if (this.score < 10) {
+            // Показываем кнопку "Пройти заново" если не все ответы правильные И вызвано из конца игры
+            if (fromEndGame && this.score < 10) {
                 document.getElementById('restart-btn').style.display = 'inline-block';
             } else {
                 document.getElementById('restart-btn').style.display = 'none';
             }
         } catch (error) {
             console.error('Ошибка загрузки таблицы лидеров:', error);
+            // Показываем пустую таблицу при ошибке
             this.displayLeaders([]);
             document.getElementById('leaders-modal').style.display = 'block';
-            document.getElementById('restart-btn').style.display = 'inline-block';
+            document.getElementById('restart-btn').style.display = fromEndGame && this.score < 10 ? 'inline-block' : 'none';
         }
     }
 
     async getLeaders() {
-        try {
-            const response = await fetch('/api/leaders');
-            return await response.json();
-        } catch (error) {
-            console.error('Ошибка получения лидеров:', error);
-            return [];
-        }
+        const response = await fetch('/api/leaders');
+        return await response.json();
     }
 
     displayLeaders(leaders) {
         const leadersTable = document.getElementById('leaders-table');
         
-        if (!leaders || leaders.length === 0) {
-            leadersTable.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">Пока нет лидеров. Будьте первым!</p>';
+        if (leaders.length === 0) {
+            leadersTable.innerHTML = '<p>Пока нет лидеров. Будьте первым!</p>';
             return;
         }
         
@@ -552,12 +490,8 @@ class KeyAdvantagesGame {
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
             
             row.innerHTML = `
-                <div>
-                    <strong>${index + 1}. ${leader.username}</strong>
-                </div>
-                <div>
-                    <span>${formattedDate}</span>
-                </div>
+                <span>${index + 1}. ${leader.username}</span>
+                <span>${formattedDate}</span>
             `;
             
             leadersTable.appendChild(row);
@@ -577,22 +511,7 @@ class KeyAdvantagesGame {
     }
 }
 
-// Инициализация игры
+// Инициализация игры когда DOM загружен
 document.addEventListener('DOMContentLoaded', () => {
-    // Предотвращаем стандартное поведение касания
-    document.addEventListener('touchstart', (e) => {
-        if (e.target.classList.contains('option') || e.target.classList.contains('empty-cell')) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    // Убираем выделение при касании
-    document.addEventListener('touchmove', (e) => {
-        if (e.target.classList.contains('option')) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    // Инициализируем игру
     new KeyAdvantagesGame();
 });
