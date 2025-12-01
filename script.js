@@ -11,13 +11,13 @@ class KeyAdvantagesGame {
         this.showLeadersFromGame = false;
         this.originalOptionsMap = new Map(); // Карта для отслеживания оригинальных элементов
         
-        // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ
+        // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ (исправлены кавычки)
         this.roundsData = [
             {
                 description: "Укажите 3 главных преимущества Tecno Spark 40",
                 correct: [0, 2, 4],
                 options: [
-                    "Тонкий и легкий корпус", "Стеклянный корпус", "Плавный экран120Гц / 144Гц",
+                    "Тонкий и легкий корпус", "Стеклянный корпус", "Плавный экран 120Гц / 144Гц",
                     "NFC", "Искусственный интеллект", "Водозащита"
                 ]
             },
@@ -65,8 +65,12 @@ class KeyAdvantagesGame {
                 description: "Ключевые преимущества Tecno MEGAPAD PRO",
                 correct: [0, 4, 5],
                 options: [
-                    "2K IPS экран 12" 90 Гц", "2K OLED экран 12'' 120 Гц", "Bluetooth 5.2",
-                    "Wi-Fi 5 ГГц", "LTE-связь", "TECNO AI"
+                    "2K IPS экран 12 дюймов 90 Гц", 
+                    "2K OLED экран 12 дюймов 120 Гц", 
+                    "Bluetooth 5.2",
+                    "Wi-Fi 5 ГГц", 
+                    "LTE-связь", 
+                    "TECNO AI"
                 ]
             },
             {
@@ -82,15 +86,19 @@ class KeyAdvantagesGame {
                 correct: [2, 3, 5],
                 options: [
                     "Стереодинамики", "ИК-порт", "Соотношение сторон 21:9",
-                    "Частота кадров 180 Гц", "Частота кадров 144 Гц", "Изогнутый экран диагональю 34""
+                    "Частота кадров 180 Гц", "Частота кадров 144 Гц", "Изогнутый экран диагональю 34 дюйма"
                 ]
             },
             {
                 description: "Ключевые преимущества Tecno MEGA MINI GAMING G1",
                 correct: [0, 1, 5],
                 options: [
-                    "Мощный процессор Intel 13 поколения", "Видеокарта NVIDIA GeForce RTX 4060 8Гб", "Игровой режим",
-                    "Видеокарта NVIDIA GeForce RTX 4060 4Гб", "Тонкий и лёгкий корпус", "Компактный корпус с RGB-подсветкой"
+                    "Мощный процессор Intel 13 поколения", 
+                    "Видеокарта NVIDIA GeForce RTX 4060 8Гб", 
+                    "Игровой режим",
+                    "Видеокарта NVIDIA GeForce RTX 4060 4Гб", 
+                    "Тонкий и лёгкий корпус", 
+                    "Компактный корпус с RGB-подсветкой"
                 ]
             }
         ];
@@ -391,12 +399,25 @@ class KeyAdvantagesGame {
         const nextBtn = document.getElementById('next-btn');
         nextBtn.textContent = roundIndex === 9 ? 'Завершить' : 'Следующий раунд';
         nextBtn.disabled = false; // Разблокируем кнопку
+        
+        console.log('Раунд', roundIndex + 1, 'загружен. Опции:', roundData.options);
     }
 
     updateOptions(options) {
         const optionsContainer = document.getElementById('options');
+        
+        // Очищаем контейнер
         optionsContainer.innerHTML = '';
         
+        console.log('Обновление опций:', options);
+        
+        // Проверяем, что options - это массив
+        if (!Array.isArray(options)) {
+            console.error('options не является массивом:', options);
+            return;
+        }
+        
+        // Создаем элементы для каждой опции
         options.forEach((option, index) => {
             const optionElement = document.createElement('div');
             optionElement.className = 'option';
@@ -416,6 +437,8 @@ class KeyAdvantagesGame {
         
         // Очищаем карту при обновлении вариантов
         this.originalOptionsMap.clear();
+        
+        console.log('Создано опций:', optionsContainer.children.length);
     }
 
     clearEmptyCells() {
@@ -744,6 +767,13 @@ class KeyAdvantagesGame {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// Проверяем, что DOM загружен перед инициализацией игры
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM загружен, инициализируем игру');
+        new KeyAdvantagesGame();
+    });
+} else {
+    console.log('DOM уже загружен, инициализируем игру');
     new KeyAdvantagesGame();
-});
+}
