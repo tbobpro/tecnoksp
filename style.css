@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent; /* Убираем подсветку при тапе на мобильных */
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -10,7 +10,7 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
-    touch-action: manipulation; /* Улучшаем отзывчивость на мобильных */
+    touch-action: manipulation;
 }
 
 .container {
@@ -35,7 +35,6 @@ body {
     margin-bottom: 10px;
 }
 
-/* ДОБАВЛЕНО: Стили для описания раунда */
 .round-description {
     background: #fff3cd;
     border: 1px solid #ffeaa7;
@@ -109,7 +108,7 @@ body {
     padding: 8px;
     transition: all 0.2s ease;
     user-select: none;
-    word-break: break-word; /* Перенос длинных слов на мобильных */
+    word-break: break-word;
 }
 
 .option:hover {
@@ -119,14 +118,14 @@ body {
 }
 
 .option.dragging {
-    opacity: 0.5;
+    opacity: 0.7;
     cursor: grabbing;
     transform: scale(0.95);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
-/* ДОБАВЛЕНО: Стили для доступных и недоступных вариантов */
 .option.used {
-    opacity: 0.3;
+    opacity: 0.5;
     cursor: not-allowed;
     background: #f8f9fa;
     border-color: #e9ecef;
@@ -140,11 +139,11 @@ body {
     box-shadow: none;
 }
 
-/* ДОБАВЛЕНО: Стиль для вариантов в ячейках */
 .empty-cell .option {
     cursor: grab;
     border-color: #667eea;
     background: #e8f4ff;
+    opacity: 1 !important;
 }
 
 .empty-cell .option:hover {
@@ -175,7 +174,6 @@ body {
     cursor: not-allowed;
 }
 
-/* ДОБАВЛЕНО: Стили для кнопки таблицы лидеров */
 .leaders-btn {
     width: 100%;
     padding: 15px;
@@ -202,7 +200,7 @@ body {
     height: 100%;
     background: rgba(0,0,0,0.5);
     z-index: 1000;
-    backdrop-filter: blur(5px); /* Эффект размытия на мобильных */
+    backdrop-filter: blur(5px);
 }
 
 .modal-content {
@@ -262,7 +260,6 @@ body {
     background: #5a6fd8;
 }
 
-/* ДОБАВЛЕНО: Стиль для кнопки "Пройти заново" */
 #restart-btn {
     background: #ffc107;
     color: #212529;
@@ -272,7 +269,6 @@ body {
     background: #e0a800;
 }
 
-/* Мобильная адаптация */
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -300,10 +296,9 @@ body {
         min-height: 50px;
         font-size: 12px;
         padding: 6px;
-        cursor: pointer; /* На мобильных всегда pointer */
+        cursor: pointer;
     }
     
-    /* На мобильных устройствах варианты в ячейках имеют другой курсор */
     .empty-cell .option {
         cursor: pointer;
     }
@@ -313,20 +308,17 @@ body {
         min-width: 280px;
     }
     
-    /* Увеличиваем область нажатия для мобильных */
     .option, .empty-cell, button {
-        min-height: 44px; /* Минимальная высота для удобного нажатия */
+        min-height: 44px;
     }
 }
 
-/* Планшеты */
 @media (min-width: 769px) and (max-width: 1024px) {
     .container {
         max-width: 500px;
     }
 }
 
-/* Анимация для мобильных взаимодействий */
 @keyframes tap-feedback {
     0% { transform: scale(1); }
     50% { transform: scale(0.95); }
@@ -335,15 +327,4 @@ body {
 
 .option:active, .empty-cell:active, button:active {
     animation: tap-feedback 0.2s ease;
-}
-
-/* ДОБАВЛЕНО: Индикация зоны удаления при перетаскивании */
-body.drag-remove .empty-cell {
-    border-color: #ff6b6b;
-    background: #fff5f5;
-}
-
-body.drag-remove .empty-cell.filled {
-    border-color: #ff6b6b;
-    background: #fff0f0;
 }
