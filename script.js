@@ -2,6 +2,8 @@ class KeyAdvantagesGame {
     constructor() {
         this.currentRound = 0;
         this.score = 0;
+        this.totalScore = 0; // Общий счет за все правильные ответы
+        this.perfectRounds = 0; // Количество полностью правильных раундов
         this.roundsOrder = [];
         this.userAnswers = [];
         this.isDragging = false;
@@ -139,6 +141,7 @@ class KeyAdvantagesGame {
             this.showLeadersFromGame = false;
             this.showLeaders();
         });
+        document.getElementById('restart-from-results').addEventListener('click', () => this.restartGame());
         
         this.setupDragAndDrop();
         this.setupTouchControls();
@@ -387,6 +390,7 @@ class KeyAdvantagesGame {
         
         const nextBtn = document.getElementById('next-btn');
         nextBtn.textContent = roundIndex === 9 ? 'Завершить' : 'Следующий раунд';
+        nextBtn.disabled = false; // Разблокируем кнопку
     }
 
     updateOptions(options) {
@@ -419,6 +423,9 @@ class KeyAdvantagesGame {
         emptyCells.forEach(cell => {
             cell.classList.remove('filled');
             cell.innerHTML = '';
+            // Сбрасываем стили подсветки
+            cell.style.backgroundColor = '';
+            cell.style.borderColor = '';
         });
 
         // Сбрасываем все варианты в исходное состояние
@@ -426,6 +433,9 @@ class KeyAdvantagesGame {
         options.forEach(option => {
             option.classList.remove('used');
             option.style.opacity = '1';
+            option.style.backgroundColor = '';
+            option.style.borderColor = '';
+            option.style.color = '';
             option.style.cursor = this.isMobile ? 'pointer' : 'grab';
         });
         
@@ -433,14 +443,123 @@ class KeyAdvantagesGame {
         this.originalOptionsMap.clear();
     }
 
+    // Метод для подсветки ответов в текущем раунде
+    highlightAnswers() {
+        const actualRound = this.roundsOrder[this.currentRound];
+        const correctAnswers = this.roundsData[actualRound].correct;
+        const userAnswers = this.userAnswers[this.currentRound] || [];
+        
+        const emptyCells = document.querySelectorAll('.empty-cell');
+        emptyCells.forEach((cell, cellIndex) => {
+            const option = cell.querySelector('.option');
+            if (option) {
+                const answerIndex = parseInt(option.getAttribute('data-option'));
+                
+                if (correctAnswers.includes(answerIndex)) {
+                    // Правильный ответ - зеленый
+                    cell.style.backgroundColor = '#d4edda';
+                    cell.style.borderColor = '#28a745';
+                    cell.style.borderWidth = '2px';
+                    cell.style.borderStyle = 'solid';
+                    option.style.color = '#155724';
+                    option.style.fontWeight = 'bold';
+                } else {
+                    // Неправильный ответ - красный
+                    cell.style.backgroundColor = '#f8d7da';
+                    cell.style.borderColor = '#dc3545';
+                    cell.style.borderWidth = '2px';
+                    cell.style.borderStyle = 'solid';
+                    option.style.color = '#721c24';
+                }
+            }
+        });
+        
+        // Подсветка правильных вариантов в списке
+        const options = document.querySelectorAll('.option:not(.used)');
+        options.forEach(option => {
+            const optionIndex = parseInt(option.getAttribute('data-option'));
+            if (correctAnswers.includes(optionIndex)) {
+                option.style.backgroundColor = '#d4edda';
+                option.style.borderColor = '#28a745';
+                option.style.borderWidth = '2px';
+            }
+        });
+    }
+
+    // Метод для очистки подсветки
+    clearHighlighting() {
+        const emptyCells = document.querySelectorAll('.empty-cell');
+        const options = document.querySelectorAll('.option');
+        
+        emptyCells.forEach(cell => {
+            cell.style.backgroundColor = '';
+            cell.style.borderColor = '';
+            cell.style.borderWidth = '';
+            cell.style.borderStyle = '';
+            const option = cell.querySelector('.option');
+            if (option) {
+                option.style.color = '';
+                option.style.fontWeight = '';
+            }
+        });
+        
+        options.forEach(option => {
+            option.style.backgroundColor = '';
+            option.style.borderColor = '';
+            option.style.borderWidth = '';
+        });
+    }
+
     nextRound() {
         this.saveRoundAnswers();
         
-        if (this.currentRound === 9) {
-            this.finishGame();
-        } else {
-            this.startRound(this.currentRound + 1);
+        // Блокируем кнопку, чтобы не нажимали несколько раз
+        const nextBtn = document.getElementById('next-btn');
+        nextBtn.disabled = true;
+        
+        // Подсвечиваем ответы текущего раунда
+        this.highlightAnswers();
+        
+        // Вычисляем очки за текущий раунд
+        this.calculateRoundScore();
+        
+        // Задержка перед переходом
+        setTimeout(() => {
+            if (this.currentRound === 9) {
+                this.finishGame();
+            } else {
+                this.clearHighlighting();
+                this.startRound(this.currentRound + 1);
+            }
+        }, 2000); // 2 секунды задержки
+    }
+
+    // Метод для подсчета очков за текущий раунд
+    calculateRoundScore() {
+        const actualRound = this.roundsOrder[this.currentRound];
+        const correctAnswers = this.roundsData[actualRound].correct;
+        const userAnswers = this.userAnswers[this.currentRound] || [];
+        
+        let roundScore = 0;
+        let allCorrect = true;
+        
+        userAnswers.forEach(answer => {
+            if (correctAnswers.includes(answer)) {
+                roundScore++;
+            } else {
+                allCorrect = false;
+            }
+        });
+        
+        this.totalScore += roundScore;
+        
+        // Проверяем, полностью ли правильный раунд
+        if (allCorrect && userAnswers.length === 3) {
+            this.perfectRounds++;
+            console.log(`Раунд ${this.currentRound + 1} пройден полностью!`);
         }
+        
+        console.log(`Раунд ${this.currentRound + 1}: ${roundScore} очков, всего: ${this.totalScore}`);
     }
 
     saveRoundAnswers() {
@@ -458,10 +577,11 @@ class KeyAdvantagesGame {
     }
 
     calculateScore() {
-        let score = 0;
+        // Считаем только полностью правильные раунды (для таблицы лидеров)
+        let perfectRounds = 0;
         
         this.userAnswers.forEach((answer, roundIndex) => {
-            if (!answer) return;
+            if (!answer || answer.length !== 3) return;
             
             const actualRound = this.roundsOrder[roundIndex];
             const correctAnswers = this.roundsData[actualRound].correct;
@@ -471,21 +591,68 @@ class KeyAdvantagesGame {
             
             if (sortedAnswer.length === sortedCorrect.length && 
                 sortedAnswer.every((val, idx) => val === sortedCorrect[idx])) {
-                score++;
+                perfectRounds++;
             }
         });
         
-        return score;
+        return perfectRounds;
     }
 
     async finishGame() {
-        this.score = this.calculateScore();
+        const perfectRounds = this.calculateScore();
         
-        document.getElementById('results-text').textContent = 
-            `Правильно отвечено: ${this.score} из 10`;
+        // Определяем мотивационную фразу на основе общего счета
+        let motivationPhrase = '';
+        let motivationClass = '';
+        
+        if (this.totalScore >= 25) {
+            motivationPhrase = '🔥 Великолепный результат! Вы настоящий эксперт TECNO! 🏆';
+            motivationClass = 'motivation-excellent';
+        } else if (this.totalScore >= 20) {
+            motivationPhrase = '🎯 Отличный результат! Вы хорошо знаете продукцию TECNO! 👍';
+            motivationClass = 'motivation-great';
+        } else if (this.totalScore >= 15) {
+            motivationPhrase = '✨ Хороший результат! Продолжайте изучать продукцию TECNO! 💪';
+            motivationClass = 'motivation-good';
+        } else if (this.totalScore >= 10) {
+            motivationPhrase = '🌟 Неплохо! Есть куда стремиться, продолжайте тренироваться!';
+            motivationClass = 'motivation-average';
+        } else {
+            motivationPhrase = '💫 Попробуйте ещё раз! Вы обязательно улучшите результат!';
+            motivationClass = 'motivation-encourage';
+        }
+        
+        // Формируем HTML для результатов
+        let resultsHTML = `
+            <div class="results-container">
+                <div class="main-result">
+                    Полностью пройдено раундов: <strong>${perfectRounds} из 10</strong>
+                </div>
+                <div class="score-result">
+                    Вы набрали: <strong>${this.totalScore} очков</strong>
+                </div>
+                <div class="motivation ${motivationClass}">${motivationPhrase}</div>
+        `;
+        
+        // Если все 10 раундов пройдены полностью - показываем специальное сообщение
+        if (perfectRounds === 10) {
+            resultsHTML += `
+                <div class="success-message">
+                    🎉 Поздравляем! Вы прошли все раунды идеально! 🎉<br>
+                    Ваш результат добавлен в таблицу лидеров!
+                </div>
+            `;
+        }
+        
+        resultsHTML += `</div>`;
+        
+        document.getElementById('results-text').innerHTML = resultsHTML;
         document.getElementById('results-modal').style.display = 'block';
         
-        await this.saveResult();
+        // Сохраняем результат только если все 10 раундов пройдены идеально
+        if (perfectRounds === 10) {
+            await this.saveResult();
+        }
     }
 
     async saveResult() {
@@ -498,7 +665,7 @@ class KeyAdvantagesGame {
                 body: JSON.stringify({
                     userId: this.user?.id || 'anonymous',
                     username: this.user?.username || 'Анонимный игрок',
-                    score: this.score,
+                    score: 10, // Всегда 10 для таблицы лидеров
                     date: new Date().toISOString()
                 })
             });
@@ -518,7 +685,7 @@ class KeyAdvantagesGame {
             document.getElementById('leaders-modal').style.display = 'block';
             
             const restartBtn = document.getElementById('restart-btn');
-            if (this.showLeadersFromGame && this.score < 10) {
+            if (this.showLeadersFromGame) {
                 restartBtn.style.display = 'inline-block';
             } else {
                 restartBtn.style.display = 'none';
@@ -529,7 +696,7 @@ class KeyAdvantagesGame {
             document.getElementById('leaders-modal').style.display = 'block';
             
             const restartBtn = document.getElementById('restart-btn');
-            if (this.showLeadersFromGame && this.score < 10) {
+            if (this.showLeadersFromGame) {
                 restartBtn.style.display = 'inline-block';
             } else {
                 restartBtn.style.display = 'none';
@@ -546,7 +713,7 @@ class KeyAdvantagesGame {
         const leadersTable = document.getElementById('leaders-table');
         
         if (leaders.length === 0) {
-            leadersTable.innerHTML = '<p>Пока нет лидеров. Будьте первым!</p>';
+            leadersTable.innerHTML = '<p class="no-leaders">Пока нет лидеров. Будьте первым!</p>';
             return;
         }
         
@@ -554,14 +721,20 @@ class KeyAdvantagesGame {
         
         leaders.forEach((leader, index) => {
             const row = document.createElement('div');
-            row.className = `leader-row ${index < 5 ? 'top-5' : ''}`;
+            row.className = `leader-row ${index < 3 ? 'top-3' : ''}`;
             
             const date = new Date(leader.date);
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
             
+            // Добавляем медали для топ-3
+            let medal = '';
+            if (index === 0) medal = '🥇';
+            else if (index === 1) medal = '🥈';
+            else if (index === 2) medal = '🥉';
+            
             row.innerHTML = `
-                <span>${index + 1}. ${leader.username}</span>
-                <span>${formattedDate}</span>
+                <span class="leader-position">${medal} ${index + 1}. ${leader.username}</span>
+                <span class="leader-date">${formattedDate}</span>
             `;
             
             leadersTable.appendChild(row);
@@ -571,12 +744,16 @@ class KeyAdvantagesGame {
     restartGame() {
         this.currentRound = 0;
         this.score = 0;
+        this.totalScore = 0;
+        this.perfectRounds = 0;
         this.userAnswers = [];
         this.generateRoundsOrder();
         
         document.getElementById('leaders-modal').style.display = 'none';
+        document.getElementById('results-modal').style.display = 'none';
         document.getElementById('restart-btn').style.display = 'none';
         
+        this.clearHighlighting();
         this.startRound(0);
     }
 }
