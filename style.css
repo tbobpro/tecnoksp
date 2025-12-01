@@ -115,17 +115,41 @@ body {
 .option:hover {
     border-color: #667eea;
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
 }
 
 .option.dragging {
     opacity: 0.5;
     cursor: grabbing;
+    transform: scale(0.95);
 }
 
+/* ДОБАВЛЕНО: Стили для доступных и недоступных вариантов */
 .option.used {
     opacity: 0.3;
     cursor: not-allowed;
     background: #f8f9fa;
+    border-color: #e9ecef;
+    transform: none;
+    box-shadow: none;
+}
+
+.option.used:hover {
+    border-color: #e9ecef;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ДОБАВЛЕНО: Стиль для вариантов в ячейках */
+.empty-cell .option {
+    cursor: grab;
+    border-color: #667eea;
+    background: #e8f4ff;
+}
+
+.empty-cell .option:hover {
+    border-color: #ff6b6b;
+    background: #fff5f5;
 }
 
 .next-btn {
@@ -279,6 +303,11 @@ body {
         cursor: pointer; /* На мобильных всегда pointer */
     }
     
+    /* На мобильных устройствах варианты в ячейках имеют другой курсор */
+    .empty-cell .option {
+        cursor: pointer;
+    }
+    
     .modal-content {
         padding: 20px;
         min-width: 280px;
@@ -306,4 +335,15 @@ body {
 
 .option:active, .empty-cell:active, button:active {
     animation: tap-feedback 0.2s ease;
+}
+
+/* ДОБАВЛЕНО: Индикация зоны удаления при перетаскивании */
+body.drag-remove .empty-cell {
+    border-color: #ff6b6b;
+    background: #fff5f5;
+}
+
+body.drag-remove .empty-cell.filled {
+    border-color: #ff6b6b;
+    background: #fff0f0;
 }
