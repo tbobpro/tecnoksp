@@ -9,6 +9,8 @@ class KeyAdvantagesGame {
         this.touchStartElement = null;
         this.longPressTimer = null;
         this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        this.lastTappedElement = null;
+        this.lastTapTime = 0;
         
         // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ
         this.roundsData = [
@@ -139,26 +141,35 @@ class KeyAdvantagesGame {
         document.getElementById('leaders-btn').addEventListener('click', () => {
             this.showLeaders();
         });
-        
-        this.setupDragAndDrop();
     }
 
     setupDragAndDrop() {
         const optionsContainer = document.getElementById('options');
         const emptyCells = document.querySelectorAll('.empty-cell');
 
+        // Удаляем старые обработчики
+        const newOptionsContainer = optionsContainer.cloneNode(false);
+        while (optionsContainer.firstChild) {
+            newOptionsContainer.appendChild(optionsContainer.firstChild);
+        }
+        optionsContainer.parentNode.replaceChild(newOptionsContainer, optionsContainer);
+
+        const newOptionsContainerRef = document.getElementById('options');
+
         // Десктоп: drag and drop
-        optionsContainer.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('option') && !e.target.classList.contains('used')) {
-                e.target.classList.add('dragging');
+        newOptionsContainerRef.addEventListener('dragstart', (e) => {
+            const option = e.target.closest('.option');
+            if (option && !option.classList.contains('used')) {
+                option.classList.add('dragging');
                 this.isDragging = true;
-                e.dataTransfer.setData('text/plain', e.target.getAttribute('data-option'));
+                e.dataTransfer.setData('text/plain', option.getAttribute('data-option'));
             }
         });
 
-        optionsContainer.addEventListener('dragend', (e) => {
-            if (e.target.classList.contains('option')) {
-                e.target.classList.remove('dragging');
+        newOptionsContainerRef.addEventListener('dragend', (e) => {
+            const option = e.target.closest('.option');
+            if (option) {
+                option.classList.remove('dragging');
                 this.isDragging = false;
             }
         });
@@ -186,7 +197,7 @@ class KeyAdvantagesGame {
 
         // Мобильные устройства: touch события
         if (this.isMobile) {
-            this.setupTouchEvents(optionsContainer, emptyCells);
+            this.setupTouchEvents(newOptionsContainerRef, emptyCells);
         }
 
         // Двойной клик для возврата опции
@@ -404,8 +415,8 @@ class KeyAdvantagesGame {
             optionsContainer.appendChild(optionElement);
         });
         
-        // Переустанавливаем обработчики для новых элементов
-        this.reinitializeEventListeners();
+        // Переустанавливаем обработчики
+        this.setupDragAndDrop();
     }
 
     clearEmptyCells() {
@@ -414,26 +425,6 @@ class KeyAdvantagesGame {
             cell.classList.remove('filled', 'hovered');
             cell.innerHTML = '';
         });
-
-        // Сбрасываем все варианты
-        const options = document.querySelectorAll('.option');
-        options.forEach(option => {
-            option.classList.remove('used', 'dragging', 'touch-active');
-            option.draggable = true;
-        });
-    }
-
-    reinitializeEventListeners() {
-        // Переустанавливаем обработчики для новых элементов options
-        const optionsContainer = document.getElementById('options');
-        const emptyCells = document.querySelectorAll('.empty-cell');
-        
-        // Удаляем старые обработчики
-        const newOptionsContainer = optionsContainer.cloneNode(true);
-        optionsContainer.parentNode.replaceChild(newOptionsContainer, optionsContainer);
-        
-        // Устанавливаем обработчики заново
-        this.setupDragAndDrop();
     }
 
     nextRound() {
