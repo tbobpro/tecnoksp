@@ -403,6 +403,9 @@ class KeyAdvantagesGame {
             optionElement.setAttribute('data-option', index);
             optionsContainer.appendChild(optionElement);
         });
+        
+        // Переустанавливаем обработчики для новых элементов
+        this.reinitializeEventListeners();
     }
 
     clearEmptyCells() {
@@ -410,10 +413,6 @@ class KeyAdvantagesGame {
         emptyCells.forEach(cell => {
             cell.classList.remove('filled', 'hovered');
             cell.innerHTML = '';
-            
-            // Удаляем обработчики событий
-            const newCell = cell.cloneNode(true);
-            cell.parentNode.replaceChild(newCell, cell);
         });
 
         // Сбрасываем все варианты
@@ -422,8 +421,18 @@ class KeyAdvantagesGame {
             option.classList.remove('used', 'dragging', 'touch-active');
             option.draggable = true;
         });
+    }
 
-        // Переустанавливаем обработчики
+    reinitializeEventListeners() {
+        // Переустанавливаем обработчики для новых элементов options
+        const optionsContainer = document.getElementById('options');
+        const emptyCells = document.querySelectorAll('.empty-cell');
+        
+        // Удаляем старые обработчики
+        const newOptionsContainer = optionsContainer.cloneNode(true);
+        optionsContainer.parentNode.replaceChild(newOptionsContainer, optionsContainer);
+        
+        // Устанавливаем обработчики заново
         this.setupDragAndDrop();
     }
 
