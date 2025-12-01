@@ -426,6 +426,8 @@ class KeyAdvantagesGame {
             // Сбрасываем стили подсветки
             cell.style.backgroundColor = '';
             cell.style.borderColor = '';
+            cell.style.borderWidth = '';
+            cell.style.borderStyle = '';
         });
 
         // Сбрасываем все варианты в исходное состояние
@@ -443,18 +445,20 @@ class KeyAdvantagesGame {
         this.originalOptionsMap.clear();
     }
 
-    // Метод для подсветки ответов в текущем раунде
+    // Метод для подсветки ответов в текущем раунде (ТОЛЬКО в ячейках)
     highlightAnswers() {
         const actualRound = this.roundsOrder[this.currentRound];
         const correctAnswers = this.roundsData[actualRound].correct;
         const userAnswers = this.userAnswers[this.currentRound] || [];
         
         const emptyCells = document.querySelectorAll('.empty-cell');
-        emptyCells.forEach((cell, cellIndex) => {
+        
+        emptyCells.forEach((cell) => {
             const option = cell.querySelector('.option');
             if (option) {
                 const answerIndex = parseInt(option.getAttribute('data-option'));
                 
+                // Проверяем, является ли выбранный ответ правильным
                 if (correctAnswers.includes(answerIndex)) {
                     // Правильный ответ - зеленый
                     cell.style.backgroundColor = '#d4edda';
@@ -470,26 +474,18 @@ class KeyAdvantagesGame {
                     cell.style.borderWidth = '2px';
                     cell.style.borderStyle = 'solid';
                     option.style.color = '#721c24';
+                    option.style.fontWeight = 'bold';
                 }
             }
         });
         
-        // Подсветка правильных вариантов в списке
-        const options = document.querySelectorAll('.option:not(.used)');
-        options.forEach(option => {
-            const optionIndex = parseInt(option.getAttribute('data-option'));
-            if (correctAnswers.includes(optionIndex)) {
-                option.style.backgroundColor = '#d4edda';
-                option.style.borderColor = '#28a745';
-                option.style.borderWidth = '2px';
-            }
-        });
+        // НЕ подсвечиваем правильные ответы в списке вариантов
+        // Только те, что уже выбраны в ячейках
     }
 
     // Метод для очистки подсветки
     clearHighlighting() {
         const emptyCells = document.querySelectorAll('.empty-cell');
-        const options = document.querySelectorAll('.option');
         
         emptyCells.forEach(cell => {
             cell.style.backgroundColor = '';
@@ -502,12 +498,6 @@ class KeyAdvantagesGame {
                 option.style.fontWeight = '';
             }
         });
-        
-        options.forEach(option => {
-            option.style.backgroundColor = '';
-            option.style.borderColor = '';
-            option.style.borderWidth = '';
-        });
     }
 
     nextRound() {
@@ -517,21 +507,92 @@ class KeyAdvantagesGame {
         const nextBtn = document.getElementById('next-btn');
         nextBtn.disabled = true;
         
-        // Подсвечиваем ответы текущего раунда
+        // Подсвечиваем ответы текущего раунда (только в ячейках)
         this.highlightAnswers();
         
         // Вычисляем очки за текущий раунд
         this.calculateRoundScore();
         
-        // Задержка перед переходом
+        // Показываем сообщение о результате раунда
+        this.showRoundResult();
+        
+        // Увеличиваем задержку до 4 секунд перед переходом
         setTimeout(() => {
             if (this.currentRound === 9) {
                 this.finishGame();
             } else {
+                this.clearRoundResult();
                 this.clearHighlighting();
                 this.startRound(this.currentRound + 1);
             }
-        }, 2000); // 2 секунды задержки
+        }, 4000); // 4 секунды задержки
+    }
+
+    // Показываем результат текущего раунда
+    showRoundResult() {
+        const actualRound = this.roundsOrder[this.currentRound];
+        const correctAnswers = this.roundsData[actualRound].correct;
+        const userAnswers = this.userAnswers[this.currentRound] || [];
+        
+        let correctCount = 0;
+        userAnswers.forEach(answer => {
+            if (correctAnswers.includes(answer)) {
+                correctCount++;
+            }
+        });
+        
+        // Создаем сообщение о результате раунда
+        const roundResultDiv = document.createElement('div');
+        roundResultDiv.id = 'round-result';
+        roundResultDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            border: 3px solid ${correctCount === 3 ? '#28a745' : '#ffc107'};
+            min-width: 300px;
+        `;
+        
+        let resultText = '';
+        if (correctCount === 3) {
+            resultText = `🎉 Отлично! Все 3 ответа верны!`;
+            roundResultDiv.style.color = '#28a745';
+        } else if (correctCount === 2) {
+            resultText = `👍 Хорошо! ${correctCount} из 3 ответов верны`;
+            roundResultDiv.style.color = '#17a2b8';
+        } else if (correctCount === 1) {
+            resultText = `👌 Неплохо! ${correctCount} из 3 ответов верен`;
+            roundResultDiv.style.color = '#ffc107';
+        } else {
+            resultText = `😕 Пока не получилось. Попробуйте в следующем раунде!`;
+            roundResultDiv.style.color = '#dc3545';
+        }
+        
+        roundResultDiv.innerHTML = `
+            <div style="margin-bottom: 10px;">Раунд ${this.currentRound + 1}</div>
+            <div>${resultText}</div>
+            <div style="margin-top: 10px; font-size: 18px; color: #666;">
+                Переход через 4 секунды...
+            </div>
+        `;
+        
+        document.body.appendChild(roundResultDiv);
+    }
+
+    // Очищаем сообщение о результате раунда
+    clearRoundResult() {
+        const roundResult = document.getElementById('round-result');
+        if (roundResult) {
+            document.body.removeChild(roundResult);
+        }
     }
 
     // Метод для подсчета очков за текущий раунд
@@ -642,17 +703,15 @@ class KeyAdvantagesGame {
                     Ваш результат добавлен в таблицу лидеров!
                 </div>
             `;
+            
+            // Сохраняем результат только если все 10 раундов пройдены идеально
+            await this.saveResult();
         }
         
         resultsHTML += `</div>`;
         
         document.getElementById('results-text').innerHTML = resultsHTML;
         document.getElementById('results-modal').style.display = 'block';
-        
-        // Сохраняем результат только если все 10 раундов пройдены идеально
-        if (perfectRounds === 10) {
-            await this.saveResult();
-        }
     }
 
     async saveResult() {
@@ -670,7 +729,8 @@ class KeyAdvantagesGame {
                 })
             });
             
-            await response.json();
+            const result = await response.json();
+            console.log('Результат сохранен:', result);
         } catch (error) {
             console.error('Ошибка сохранения результата:', error);
         }
@@ -723,7 +783,7 @@ class KeyAdvantagesGame {
             const row = document.createElement('div');
             row.className = `leader-row ${index < 3 ? 'top-3' : ''}`;
             
-            const date = new Date(leader.date);
+            const date = new Date(leader.originalDate || leader.date);
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
             
             // Добавляем медали для топ-3
@@ -753,6 +813,7 @@ class KeyAdvantagesGame {
         document.getElementById('results-modal').style.display = 'none';
         document.getElementById('restart-btn').style.display = 'none';
         
+        this.clearRoundResult();
         this.clearHighlighting();
         this.startRound(0);
     }
