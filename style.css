@@ -2,6 +2,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
 }
 
 body {
@@ -9,6 +11,9 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .container {
@@ -33,7 +38,6 @@ body {
     margin-bottom: 10px;
 }
 
-/* ДОБАВЛЕНО: Стили для описания раунда */
 .round-description {
     background: #fff3cd;
     border: 1px solid #ffeaa7;
@@ -59,11 +63,12 @@ body {
     display: flex;
     justify-content: space-between;
     margin-bottom: 30px;
+    gap: 10px;
 }
 
 .empty-cell {
-    width: 80px;
-    height: 80px;
+    flex: 1;
+    min-height: 80px;
     border: 2px dashed #ccc;
     border-radius: 10px;
     display: flex;
@@ -71,6 +76,8 @@ body {
     justify-content: center;
     background: #f8f9fa;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .empty-cell.hovered {
@@ -83,10 +90,31 @@ body {
     border-color: #667eea;
 }
 
+.empty-cell .remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: none;
+    z-index: 2;
+}
+
+.empty-cell.filled:hover .remove-btn {
+    display: block;
+}
+
 .options {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    touch-action: manipulation;
 }
 
 .option {
@@ -98,17 +126,25 @@ body {
     align-items: center;
     justify-content: center;
     background: white;
-    cursor: grab;
+    cursor: pointer;
     font-size: 14px;
     text-align: center;
     padding: 5px;
     transition: all 0.2s ease;
     user-select: none;
+    touch-action: manipulation;
+    -webkit-user-drag: none;
 }
 
 .option:hover {
     border-color: #667eea;
     transform: translateY(-2px);
+}
+
+.option.touch-active {
+    border-color: #667eea;
+    background: #f0f4ff;
+    transform: scale(0.95);
 }
 
 .option.dragging {
@@ -119,6 +155,17 @@ body {
 .option.used {
     opacity: 0.3;
     cursor: not-allowed;
+    pointer-events: none;
+}
+
+.option.removing {
+    animation: returnToPlace 0.3s ease;
+}
+
+@keyframes returnToPlace {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
 
 .next-btn {
@@ -131,6 +178,8 @@ body {
     font-size: 16px;
     cursor: pointer;
     transition: background 0.3s ease;
+    margin-bottom: 10px;
+    touch-action: manipulation;
 }
 
 .next-btn:hover {
@@ -142,6 +191,24 @@ body {
     cursor: not-allowed;
 }
 
+/* ДОБАВЛЕНО: Стили для кнопки таблицы лидеров */
+.leaders-btn {
+    width: 100%;
+    padding: 15px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    touch-action: manipulation;
+}
+
+.leaders-btn:hover {
+    background: #45a049;
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -151,6 +218,7 @@ body {
     height: 100%;
     background: rgba(0,0,0,0.5);
     z-index: 1000;
+    backdrop-filter: blur(5px);
 }
 
 .modal-content {
@@ -164,6 +232,8 @@ body {
     text-align: center;
     min-width: 300px;
     max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .modal h2 {
@@ -179,6 +249,8 @@ body {
 #leaders-table {
     margin: 20px 0;
     text-align: left;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .leader-row {
@@ -186,6 +258,7 @@ body {
     border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .leader-row.top-5 {
@@ -193,16 +266,94 @@ body {
     font-weight: bold;
 }
 
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
 .modal button {
-    padding: 10px 20px;
+    padding: 12px 24px;
     margin: 5px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     background: #667eea;
     color: white;
+    font-size: 16px;
+    min-width: 120px;
+    touch-action: manipulation;
 }
 
 .modal button:hover {
     background: #5a6fd8;
+}
+
+.modal button#close-btn {
+    background: #6c757d;
+}
+
+.modal button#close-btn:hover {
+    background: #5a6268;
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .game-area {
+        padding: 15px;
+    }
+    
+    .empty-cells {
+        margin-bottom: 20px;
+    }
+    
+    .empty-cell {
+        min-height: 70px;
+    }
+    
+    .options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .option {
+        height: 55px;
+        font-size: 13px;
+    }
+    
+    .modal-content {
+        padding: 20px;
+        width: 95%;
+    }
+    
+    .modal button {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+}
+
+@media (max-width: 320px) {
+    .options {
+        grid-template-columns: 1fr;
+    }
+    
+    .option {
+        height: 50px;
+    }
+}
+
+/* Отключение задержки касания на iOS */
+.option {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
