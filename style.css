@@ -328,3 +328,71 @@ body {
 .option:active, .empty-cell:active, button:active {
     animation: tap-feedback 0.2s ease;
 }
+
+
+/* Стили для результатов */
+.results-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.main-result {
+    font-size: 22px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.score-result {
+    font-size: 28px;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.motivation {
+    font-size: 18px;
+    color: #28a745;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #28a745;
+}
+
+.success-message {
+    font-size: 20px;
+    color: #ffc107;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff3cd;
+    border-radius: 10px;
+    border: 2px solid #ffc107;
+    font-weight: bold;
+}
+
+/* Анимация для подсветки */
+@keyframes highlightCorrect {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes highlightIncorrect {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+    100% { transform: translateX(0); }
+}
+
+.empty-cell[style*="background-color: #d4edda"] {
+    animation: highlightCorrect 0.5s ease;
+}
+
+.empty-cell[style*="background-color: #f8d7da"] {
+    animation: highlightIncorrect 0.5s ease;
+}
