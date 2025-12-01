@@ -196,7 +196,18 @@ class KeyAdvantagesGame {
                 this.addOptionToCell(option, cell);
             });
             
-            // ДОБАВЛЕНО: Обработчик для удаления варианта перетаскиванием из ячейки
+            // ДОБАВЛЕНО: Обработчик для удаления варианта перетаскиванием из ячейки в любое место
+            cell.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('option') && e.target.parentElement.classList.contains('empty-cell')) {
+                    // Это вариант в ячейке, начинаем перетаскивание для удаления
+                    e.target.classList.add('dragging');
+                    this.isDragging = true;
+                    e.dataTransfer.setData('text/plain', 'remove');
+                    e.dataTransfer.setData('option-index', e.target.getAttribute('data-option'));
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+
             cell.addEventListener('dragover', (e) => {
                 if (cell.children.length > 0) {
                     e.preventDefault();
@@ -206,9 +217,28 @@ class KeyAdvantagesGame {
             cell.addEventListener('drop', (e) => {
                 if (cell.children.length > 0) {
                     e.preventDefault();
+                    // Удаляем вариант из ячейки
                     this.removeOptionFromCell(cell.firstChild);
                 }
             });
+        });
+        
+        // ДОБАВЛЕНО: Обработчик для удаления варианта перетаскиванием в любое место страницы
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            
+            // Проверяем, перетаскивается ли вариант из ячейки
+            const optionIndex = e.dataTransfer.getData('option-index');
+            const option = document.querySelector(`.option[data-option="${optionIndex}"]`);
+            
+            // Если вариант был в ячейке (имеет родителя с классом empty-cell)
+            if (option && option.parentElement && option.parentElement.classList.contains('empty-cell')) {
+                this.removeOptionFromCell(option);
+            }
         });
     }
     
@@ -267,7 +297,7 @@ class KeyAdvantagesGame {
     
     // ДОБАВЛЕНО: Метод для добавления варианта в ячейку
     addOptionToCell(option, cell) {
-        if (!cell || cell.hasChildNodes() || option.classList.contains('used')) {
+        if (!cell || cell.hasChildNodes() || !option || option.classList.contains('used')) {
             return;
         }
         
@@ -275,6 +305,20 @@ class KeyAdvantagesGame {
         optionClone.classList.remove('dragging');
         optionClone.draggable = !this.isMobile; // Отключаем перетаскивание на мобильных
         optionClone.style.cursor = this.isMobile ? 'pointer' : 'default';
+        
+        // Добавляем возможность перетаскивания для удаления
+        optionClone.addEventListener('dragstart', (e) => {
+            e.target.classList.add('dragging');
+            this.isDragging = true;
+            e.dataTransfer.setData('text/plain', 'remove');
+            e.dataTransfer.setData('option-index', e.target.getAttribute('data-option'));
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        optionClone.addEventListener('dragend', () => {
+            this.isDragging = false;
+        });
+        
         cell.appendChild(optionClone);
         cell.classList.add('filled');
         
@@ -294,8 +338,15 @@ class KeyAdvantagesGame {
         const originalOption = document.querySelector(`.option[data-option="${optionIndex}"]`);
         
         if (originalOption) {
+            // ВАЖНОЕ ИСПРАВЛЕНИЕ: Возвращаем вариант в список доступных
             originalOption.classList.remove('used');
             originalOption.draggable = !this.isMobile;
+            originalOption.style.opacity = '1';
+            
+            // Для мобильных устройств восстанавливаем стиль курсора
+            if (this.isMobile) {
+                originalOption.style.cursor = 'pointer';
+            }
         }
         
         cell.removeChild(optionClone);
@@ -376,6 +427,12 @@ class KeyAdvantagesGame {
         options.forEach(option => {
             option.classList.remove('used');
             option.draggable = !this.isMobile; // Учитываем мобильные устройства
+            option.style.opacity = '1';
+            
+            // Для мобильных устройств восстанавливаем стиль курсора
+            if (this.isMobile) {
+                option.style.cursor = 'pointer';
+            }
         });
     }
 
