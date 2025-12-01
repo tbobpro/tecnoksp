@@ -23,7 +23,7 @@ class KeyAdvantagesGame {
                 correct: [1, 3, 4],
                 options: [
                     "Поддержка 5G", "TECNO AI", "Техпроцесс 12 нм,
-                    "Flashsnap", "КАМЕРА SONY 50 МП", "OLED-дисплей"
+                    "функция Flashsnap", "КАМЕРА SONY 50 МП", "OLED-дисплей"
                 ]
             },
             // Раунд 3
