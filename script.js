@@ -6,11 +6,11 @@ class KeyAdvantagesGame {
         this.userAnswers = [];
         this.isDragging = false;
         this.isMobile = this.checkMobile();
-        this.showLeadersFromGame = false; // Флаг для отслеживания откуда вызвана таблица лидеров
+        this.showLeadersFromGame = false;
+        this.originalOptionsMap = new Map(); // Карта для отслеживания оригинальных элементов
         
         // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ
         this.roundsData = [
-            // Раунд 1
             {
                 description: "Укажите 3 главных преимущества Tecno Spark 40",
                 correct: [0, 2, 4],
@@ -19,7 +19,6 @@ class KeyAdvantagesGame {
                     "NFC", "Искусственный интеллект", "Водозащита"
                 ]
             },
-            // Раунд 2
             {
                 description: "Выберите 3 ключевых ключевых преимущества смартфонов Tecno Camon 40",
                 correct: [1, 3, 4],
@@ -28,7 +27,6 @@ class KeyAdvantagesGame {
                     "Flashsnap", "КАМЕРА SONY 50 МП", "OLED-дисплей"
                 ]
             },
-            // Раунд 3
             {
                 description: "Основные преимущества Tecno Spark Slim",
                 correct: [0, 1, 2],
@@ -37,7 +35,6 @@ class KeyAdvantagesGame {
                     "IP64", "Аккумулятор 5160мАч", "Основная камера 50 Мп"
                 ]
             },
-            // Раунд 4
             {
                 description: "Основные преимущества Tecno Megabook S14",
                 correct: [3, 4, 5],
@@ -46,7 +43,6 @@ class KeyAdvantagesGame {
                     "2.8K OLED Дисплей", "Тонкий и лёгкий корпус", "Tecno AI"
                 ]
             },
-            // Раунд 5
             {
                 description: "Ключевые преимущества Tecno POVA 7",
                 correct: [0, 3, 5],
@@ -55,7 +51,6 @@ class KeyAdvantagesGame {
                     "Надёжный сигнал", "Режим игрофикации", "Улучшенная навигация"
                 ]
             },
-            // Раунд 6
             {
                 description: "Ключевые преимущества Tecno Megabook T14 Air",
                 correct: [1, 2, 4],
@@ -64,7 +59,6 @@ class KeyAdvantagesGame {
                     "Яркость 400 нит", "Быстрый интернет с Wi-Fi 6E", "HDR"
                 ]
             },
-            // Раунд 7
             {
                 description: "Ключевые преимущества Tecno MEGAPAD PRO",
                 correct: [0, 4, 5],
@@ -73,7 +67,6 @@ class KeyAdvantagesGame {
                     "Wi-Fi 5 ГГц", "LTE-связь", "TECNO AI"
                 ]
             },
-            // Раунд 8
             {
                 description: "Ключевые преимущества Tecno MEGAPAD 11",
                 correct: [1, 3, 4],
@@ -82,7 +75,6 @@ class KeyAdvantagesGame {
                     "Большой объём памяти 256 Гб + 8 Гб", "Емкий аккумулятор 8000 мАч", "Ёмкий аккумулятор 8800 мАч"
                 ]
             },
-            // Раунд 9
             {
                 description: "Ключевые преимущества монитора Tecno Megaview GT",
                 correct: [2, 3, 5],
@@ -91,7 +83,6 @@ class KeyAdvantagesGame {
                     "Частота кадров 180 Гц", "Частота кадров 144 Гц", "Изогнутый экран диагональю 34”"
                 ]
             },
-            // Раунд 10
             {
                 description: "Ключевые преимущества Tecno Camon 30S",
                 correct: [0, 1, 5],
@@ -139,17 +130,13 @@ class KeyAdvantagesGame {
     setupEventListeners() {
         document.getElementById('next-btn').addEventListener('click', () => this.nextRound());
         document.getElementById('ok-btn').addEventListener('click', () => {
-            this.showLeadersFromGame = true; // Устанавливаем флаг, что показ из конца игры
+            this.showLeadersFromGame = true;
             this.showLeaders();
         });
         document.getElementById('restart-btn').addEventListener('click', () => this.restartGame());
-        
-        // ДОБАВЛЕНО: Универсальный обработчик для кнопки закрытия
         document.getElementById('close-btn').addEventListener('click', () => this.handleCloseButton());
-        
-        // ДОБАВЛЕНО: Обработчик для кнопки таблицы лидеров
         document.getElementById('leaders-btn').addEventListener('click', () => {
-            this.showLeadersFromGame = false; // Устанавливаем флаг, что показ из кнопки
+            this.showLeadersFromGame = false;
             this.showLeaders();
         });
         
@@ -166,6 +153,7 @@ class KeyAdvantagesGame {
                 e.target.classList.add('dragging');
                 this.isDragging = true;
                 e.dataTransfer.setData('text/plain', e.target.getAttribute('data-option'));
+                e.dataTransfer.setData('type', 'option');
             }
         });
 
@@ -179,7 +167,9 @@ class KeyAdvantagesGame {
         emptyCells.forEach(cell => {
             cell.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                cell.classList.add('hovered');
+                if (!cell.hasChildNodes()) {
+                    cell.classList.add('hovered');
+                }
             });
 
             cell.addEventListener('dragleave', () => {
@@ -191,39 +181,44 @@ class KeyAdvantagesGame {
                 cell.classList.remove('hovered');
                 
                 const optionIndex = e.dataTransfer.getData('text/plain');
-                const option = document.querySelector(`.option[data-option="${optionIndex}"]`);
+                const type = e.dataTransfer.getData('type');
                 
-                this.addOptionToCell(option, cell);
+                if (type === 'option') {
+                    const originalOptions = document.querySelectorAll(`.option[data-option="${optionIndex}"]`);
+                    let originalOption = null;
+                    
+                    // Находим оригинальный вариант (не использованный)
+                    for (let op of originalOptions) {
+                        if (!op.classList.contains('used') && !op.parentElement.classList.contains('empty-cell')) {
+                            originalOption = op;
+                            break;
+                        }
+                    }
+                    
+                    if (originalOption && !cell.hasChildNodes()) {
+                        this.addOptionToCell(originalOption, cell);
+                    }
+                } else if (type === 'remove') {
+                    // Удаление варианта из ячейки
+                    const optionInCell = cell.querySelector('.option');
+                    if (optionInCell) {
+                        this.removeOptionFromCell(optionInCell);
+                    }
+                }
             });
             
-            // ДОБАВЛЕНО: Обработчик для удаления варианта перетаскиванием из ячейки в любое место
+            // Настраиваем перетаскивание для удаления вариантов из ячеек
             cell.addEventListener('dragstart', (e) => {
-                if (e.target.classList.contains('option') && e.target.parentElement.classList.contains('empty-cell')) {
-                    // Это вариант в ячейке, начинаем перетаскивание для удаления
+                if (e.target.classList.contains('option') && e.target.parentElement === cell) {
                     e.target.classList.add('dragging');
-                    this.isDragging = true;
-                    e.dataTransfer.setData('text/plain', 'remove');
+                    e.dataTransfer.setData('type', 'remove');
                     e.dataTransfer.setData('option-index', e.target.getAttribute('data-option'));
                     e.dataTransfer.effectAllowed = 'move';
                 }
             });
-
-            cell.addEventListener('dragover', (e) => {
-                if (cell.children.length > 0) {
-                    e.preventDefault();
-                }
-            });
-
-            cell.addEventListener('drop', (e) => {
-                if (cell.children.length > 0) {
-                    e.preventDefault();
-                    // Удаляем вариант из ячейки
-                    this.removeOptionFromCell(cell.firstChild);
-                }
-            });
         });
         
-        // ДОБАВЛЕНО: Обработчик для удаления варианта перетаскиванием в любое место страницы
+        // Обработчик для удаления варианта перетаскиванием в любое место
         document.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
@@ -231,18 +226,23 @@ class KeyAdvantagesGame {
         document.addEventListener('drop', (e) => {
             e.preventDefault();
             
-            // Проверяем, перетаскивается ли вариант из ячейки
+            const type = e.dataTransfer.getData('type');
             const optionIndex = e.dataTransfer.getData('option-index');
-            const option = document.querySelector(`.option[data-option="${optionIndex}"]`);
             
-            // Если вариант был в ячейке (имеет родителя с классом empty-cell)
-            if (option && option.parentElement && option.parentElement.classList.contains('empty-cell')) {
-                this.removeOptionFromCell(option);
+            if (type === 'remove' && optionIndex) {
+                // Ищем вариант в ячейках по индексу
+                const emptyCells = document.querySelectorAll('.empty-cell');
+                for (let cell of emptyCells) {
+                    const optionInCell = cell.querySelector(`.option[data-option="${optionIndex}"]`);
+                    if (optionInCell) {
+                        this.removeOptionFromCell(optionInCell);
+                        break;
+                    }
+                }
             }
         });
     }
     
-    // ДОБАВЛЕНО: Настройка сенсорного управления для мобильных устройств
     setupTouchControls() {
         const optionsContainer = document.getElementById('options');
         const emptyCells = document.querySelectorAll('.empty-cell');
@@ -284,7 +284,6 @@ class KeyAdvantagesGame {
         });
     }
     
-    // ДОБАВЛЕНО: Метод для добавления варианта в первую свободную ячейку
     addOptionToEmptyCell(option) {
         const emptyCells = document.querySelectorAll('.empty-cell');
         for (let cell of emptyCells) {
@@ -295,60 +294,65 @@ class KeyAdvantagesGame {
         }
     }
     
-    // ДОБАВЛЕНО: Метод для добавления варианта в ячейку
     addOptionToCell(option, cell) {
         if (!cell || cell.hasChildNodes() || !option || option.classList.contains('used')) {
             return;
         }
         
+        const optionIndex = option.getAttribute('data-option');
+        
+        // Создаем клон для ячейки
         const optionClone = option.cloneNode(true);
         optionClone.classList.remove('dragging');
-        optionClone.draggable = !this.isMobile; // Отключаем перетаскивание на мобильных
+        optionClone.draggable = true;
         optionClone.style.cursor = this.isMobile ? 'pointer' : 'default';
+        optionClone.setAttribute('data-option', optionIndex);
         
-        // Добавляем возможность перетаскивания для удаления
-        optionClone.addEventListener('dragstart', (e) => {
-            e.target.classList.add('dragging');
-            this.isDragging = true;
-            e.dataTransfer.setData('text/plain', 'remove');
-            e.dataTransfer.setData('option-index', e.target.getAttribute('data-option'));
-            e.dataTransfer.effectAllowed = 'move';
-        });
-        
-        optionClone.addEventListener('dragend', () => {
-            this.isDragging = false;
-        });
+        // Сохраняем связь между клоном и оригиналом
+        this.originalOptionsMap.set(optionClone, option);
         
         cell.appendChild(optionClone);
         cell.classList.add('filled');
         
+        // Помечаем оригинальный вариант как использованный
         option.classList.add('used');
-        option.draggable = false;
+        option.style.opacity = '0.5';
         
         // Обновляем ответы
         this.saveRoundAnswers();
     }
     
-    // ДОБАВЛЕНО: Метод для удаления варианта из ячейки
     removeOptionFromCell(optionClone) {
         const cell = optionClone.parentElement;
         if (!cell || !cell.classList.contains('empty-cell')) return;
         
-        const optionIndex = optionClone.getAttribute('data-option');
-        const originalOption = document.querySelector(`.option[data-option="${optionIndex}"]`);
+        // Находим оригинальный вариант по карте
+        let originalOption = this.originalOptionsMap.get(optionClone);
         
-        if (originalOption) {
-            // ВАЖНОЕ ИСПРАВЛЕНИЕ: Возвращаем вариант в список доступных
-            originalOption.classList.remove('used');
-            originalOption.draggable = !this.isMobile;
-            originalOption.style.opacity = '1';
+        // Если не нашли по карте, ищем по индексу
+        if (!originalOption) {
+            const optionIndex = optionClone.getAttribute('data-option');
+            const options = document.querySelectorAll(`.option[data-option="${optionIndex}"]`);
             
-            // Для мобильных устройств восстанавливаем стиль курсора
-            if (this.isMobile) {
-                originalOption.style.cursor = 'pointer';
+            for (let option of options) {
+                if (!option.parentElement.classList.contains('empty-cell')) {
+                    originalOption = option;
+                    break;
+                }
             }
         }
         
+        // Удаляем из карты
+        this.originalOptionsMap.delete(optionClone);
+        
+        // Возвращаем оригинальный вариант в доступное состояние
+        if (originalOption) {
+            originalOption.classList.remove('used');
+            originalOption.style.opacity = '1';
+            originalOption.style.cursor = this.isMobile ? 'pointer' : 'grab';
+        }
+        
+        // Удаляем клон из ячейки
         cell.removeChild(optionClone);
         cell.classList.remove('filled');
         
@@ -356,19 +360,16 @@ class KeyAdvantagesGame {
         this.saveRoundAnswers();
     }
     
-    // ДОБАВЛЕНО: Обработчик кнопки закрытия в зависимости от контекста
     handleCloseButton() {
         const leadersModal = document.getElementById('leaders-modal');
         
         if (this.showLeadersFromGame) {
-            // Если показ из конца игры - закрываем игру
             if (this.tg) {
                 this.tg.close();
             } else {
                 alert('Игра завершена!');
             }
         } else {
-            // Если показ из кнопки - просто закрываем модальное окно
             leadersModal.style.display = 'none';
         }
     }
@@ -379,19 +380,13 @@ class KeyAdvantagesGame {
         const roundData = this.roundsData[actualRound];
         
         document.getElementById('current-round').textContent = roundIndex + 1;
-        
-        // ОБНОВЛЕНИЕ: Добавляем отображение описания раунда
         document.getElementById('round-description').textContent = roundData.description;
         
         this.updateOptions(roundData.options);
         this.clearEmptyCells();
         
         const nextBtn = document.getElementById('next-btn');
-        if (roundIndex === 9) {
-            nextBtn.textContent = 'Завершить';
-        } else {
-            nextBtn.textContent = 'Следующий раунд';
-        }
+        nextBtn.textContent = roundIndex === 9 ? 'Завершить' : 'Следующий раунд';
     }
 
     updateOptions(options) {
@@ -401,18 +396,22 @@ class KeyAdvantagesGame {
         options.forEach((option, index) => {
             const optionElement = document.createElement('div');
             optionElement.className = 'option';
-            optionElement.draggable = !this.isMobile; // Отключаем перетаскивание на мобильных
+            optionElement.draggable = !this.isMobile;
             optionElement.textContent = option;
             optionElement.setAttribute('data-option', index);
             
-            // Добавляем стиль для мобильных устройств
             if (this.isMobile) {
                 optionElement.style.cursor = 'pointer';
                 optionElement.style.touchAction = 'manipulation';
+            } else {
+                optionElement.style.cursor = 'grab';
             }
             
             optionsContainer.appendChild(optionElement);
         });
+        
+        // Очищаем карту при обновлении вариантов
+        this.originalOptionsMap.clear();
     }
 
     clearEmptyCells() {
@@ -422,18 +421,16 @@ class KeyAdvantagesGame {
             cell.innerHTML = '';
         });
 
-        // Сбрасываем все варианты
+        // Сбрасываем все варианты в исходное состояние
         const options = document.querySelectorAll('.option');
         options.forEach(option => {
             option.classList.remove('used');
-            option.draggable = !this.isMobile; // Учитываем мобильные устройства
             option.style.opacity = '1';
-            
-            // Для мобильных устройств восстанавливаем стиль курсора
-            if (this.isMobile) {
-                option.style.cursor = 'pointer';
-            }
+            option.style.cursor = this.isMobile ? 'pointer' : 'grab';
         });
+        
+        // Очищаем карту
+        this.originalOptionsMap.clear();
     }
 
     nextRound() {
@@ -458,7 +455,6 @@ class KeyAdvantagesGame {
         });
         
         this.userAnswers[this.currentRound] = currentAnswers;
-        console.log(`Ответы раунда ${this.currentRound}:`, currentAnswers);
     }
 
     calculateScore() {
@@ -470,11 +466,9 @@ class KeyAdvantagesGame {
             const actualRound = this.roundsOrder[roundIndex];
             const correctAnswers = this.roundsData[actualRound].correct;
             
-            // Сортируем для сравнения
             const sortedAnswer = [...answer].sort();
             const sortedCorrect = [...correctAnswers].sort();
             
-            // Проверяем совпадение массивов
             if (sortedAnswer.length === sortedCorrect.length && 
                 sortedAnswer.every((val, idx) => val === sortedCorrect[idx])) {
                 score++;
@@ -491,7 +485,6 @@ class KeyAdvantagesGame {
             `Правильно отвечено: ${this.score} из 10`;
         document.getElementById('results-modal').style.display = 'block';
         
-        // Сохраняем результат на сервер
         await this.saveResult();
     }
 
@@ -510,15 +503,13 @@ class KeyAdvantagesGame {
                 })
             });
             
-            const result = await response.json();
-            console.log('Результат сохранен:', result);
+            await response.json();
         } catch (error) {
             console.error('Ошибка сохранения результата:', error);
         }
     }
 
     async showLeaders() {
-        // Закрываем окно результатов, если оно открыто
         document.getElementById('results-modal').style.display = 'none';
         
         try {
@@ -526,7 +517,6 @@ class KeyAdvantagesGame {
             this.displayLeaders(leaders);
             document.getElementById('leaders-modal').style.display = 'block';
             
-            // Показываем кнопку "Пройти заново" если вызывается из конца игры и не все ответы правильные
             const restartBtn = document.getElementById('restart-btn');
             if (this.showLeadersFromGame && this.score < 10) {
                 restartBtn.style.display = 'inline-block';
@@ -535,11 +525,9 @@ class KeyAdvantagesGame {
             }
         } catch (error) {
             console.error('Ошибка загрузки таблицы лидеров:', error);
-            // Показываем пустую таблицу при ошибке
             this.displayLeaders([]);
             document.getElementById('leaders-modal').style.display = 'block';
             
-            // Управляем видимостью кнопки "Пройти заново"
             const restartBtn = document.getElementById('restart-btn');
             if (this.showLeadersFromGame && this.score < 10) {
                 restartBtn.style.display = 'inline-block';
@@ -593,7 +581,6 @@ class KeyAdvantagesGame {
     }
 }
 
-// Инициализация игры когда DOM загружен
 document.addEventListener('DOMContentLoaded', () => {
     new KeyAdvantagesGame();
 });
