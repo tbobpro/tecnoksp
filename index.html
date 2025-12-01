@@ -12,6 +12,9 @@
         <div class="header">
             <h1>Ключевые преимущества</h1>
             <div class="round-counter">Раунд: <span id="current-round">1</span>/10</div>
+            <div class="score-counter" id="score-counter" style="display: none;">
+                Очки: <span id="current-score">0</span>
+            </div>
         </div>
 
         <div class="game-area">
@@ -40,8 +43,11 @@
     <div class="modal" id="results-modal">
         <div class="modal-content">
             <h2>Результаты</h2>
-            <p id="results-text"></p>
-            <button id="ok-btn">OK</button>
+            <div id="results-text"></div>
+            <div style="margin-top: 20px;">
+                <button id="ok-btn">Посмотреть таблицу лидеров</button>
+                <button id="restart-from-results" style="background: #ffc107; color: #212529;">Играть снова</button>
+            </div>
         </div>
     </div>
 
@@ -50,8 +56,10 @@
         <div class="modal-content">
             <h2>Таблица лидеров</h2>
             <div id="leaders-table"></div>
-            <button id="restart-btn" style="display: none;">Пройти заново</button>
-            <button id="close-btn">Закрыть</button>
+            <div style="margin-top: 20px;">
+                <button id="restart-btn" style="background: #28a745;">Играть снова</button>
+                <button id="close-btn">Закрыть</button>
+            </div>
         </div>
     </div>
 
