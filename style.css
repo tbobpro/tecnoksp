@@ -2,8 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent; /* Убираем подсветку при тапе на мобильных */
 }
 
 body {
@@ -11,9 +10,7 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
-    touch-action: manipulation;
-    -webkit-user-select: none;
-    user-select: none;
+    touch-action: manipulation; /* Улучшаем отзывчивость на мобильных */
 }
 
 .container {
@@ -38,6 +35,7 @@ body {
     margin-bottom: 10px;
 }
 
+/* ДОБАВЛЕНО: Стили для описания раунда */
 .round-description {
     background: #fff3cd;
     border: 1px solid #ffeaa7;
@@ -69,6 +67,7 @@ body {
 .empty-cell {
     flex: 1;
     min-height: 80px;
+    max-width: 80px;
     border: 2px dashed #ccc;
     border-radius: 10px;
     display: flex;
@@ -76,8 +75,6 @@ body {
     justify-content: center;
     background: #f8f9fa;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
 }
 
 .empty-cell.hovered {
@@ -88,63 +85,36 @@ body {
 .empty-cell.filled {
     border-style: solid;
     border-color: #667eea;
-}
-
-.empty-cell .remove-btn {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
-    background: #ff6b6b;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 12px;
-    cursor: pointer;
-    display: none;
-    z-index: 2;
-}
-
-.empty-cell.filled:hover .remove-btn {
-    display: block;
+    background: #e8f4ff;
 }
 
 .options {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    touch-action: manipulation;
 }
 
 .option {
     width: 100%;
-    height: 60px;
+    min-height: 60px;
     border: 2px solid #e9ecef;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: white;
-    cursor: pointer;
+    cursor: grab;
     font-size: 14px;
     text-align: center;
-    padding: 5px;
+    padding: 8px;
     transition: all 0.2s ease;
     user-select: none;
-    touch-action: manipulation;
-    -webkit-user-drag: none;
+    word-break: break-word; /* Перенос длинных слов на мобильных */
 }
 
 .option:hover {
     border-color: #667eea;
     transform: translateY(-2px);
-}
-
-.option.touch-active {
-    border-color: #667eea;
-    background: #f0f4ff;
-    transform: scale(0.95);
 }
 
 .option.dragging {
@@ -155,17 +125,7 @@ body {
 .option.used {
     opacity: 0.3;
     cursor: not-allowed;
-    pointer-events: none;
-}
-
-.option.removing {
-    animation: returnToPlace 0.3s ease;
-}
-
-@keyframes returnToPlace {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+    background: #f8f9fa;
 }
 
 .next-btn {
@@ -179,7 +139,7 @@ body {
     cursor: pointer;
     transition: background 0.3s ease;
     margin-bottom: 10px;
-    touch-action: manipulation;
+    font-weight: bold;
 }
 
 .next-btn:hover {
@@ -195,18 +155,18 @@ body {
 .leaders-btn {
     width: 100%;
     padding: 15px;
-    background: #4CAF50;
+    background: #28a745;
     color: white;
     border: none;
     border-radius: 10px;
     font-size: 16px;
     cursor: pointer;
     transition: background 0.3s ease;
-    touch-action: manipulation;
+    font-weight: bold;
 }
 
 .leaders-btn:hover {
-    background: #45a049;
+    background: #218838;
 }
 
 .modal {
@@ -218,7 +178,7 @@ body {
     height: 100%;
     background: rgba(0,0,0,0.5);
     z-index: 1000;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px); /* Эффект размытия на мобильных */
 }
 
 .modal-content {
@@ -249,8 +209,6 @@ body {
 #leaders-table {
     margin: 20px 0;
     text-align: left;
-    max-height: 300px;
-    overflow-y: auto;
 }
 
 .leader-row {
@@ -258,7 +216,6 @@ body {
     border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
-    align-items: center;
 }
 
 .leader-row.top-5 {
@@ -266,94 +223,77 @@ body {
     font-weight: bold;
 }
 
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
-    flex-wrap: wrap;
-}
-
 .modal button {
-    padding: 12px 24px;
+    padding: 10px 20px;
     margin: 5px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     background: #667eea;
     color: white;
-    font-size: 16px;
-    min-width: 120px;
-    touch-action: manipulation;
+    font-weight: bold;
 }
 
 .modal button:hover {
     background: #5a6fd8;
 }
 
-.modal button#close-btn {
-    background: #6c757d;
-}
-
-.modal button#close-btn:hover {
-    background: #5a6268;
-}
-
-/* Адаптация для мобильных устройств */
-@media (max-width: 480px) {
+/* Мобильная адаптация */
+@media (max-width: 768px) {
     body {
         padding: 10px;
     }
     
-    .game-area {
-        padding: 15px;
+    .container {
+        max-width: 100%;
     }
     
-    .empty-cells {
-        margin-bottom: 20px;
+    .header h1 {
+        font-size: 20px;
+    }
+    
+    .round-description {
+        font-size: 14px;
+        padding: 12px;
     }
     
     .empty-cell {
         min-height: 70px;
-    }
-    
-    .options {
-        grid-template-columns: repeat(2, 1fr);
+        max-width: 70px;
     }
     
     .option {
-        height: 55px;
-        font-size: 13px;
+        min-height: 50px;
+        font-size: 12px;
+        padding: 6px;
+        cursor: pointer; /* На мобильных всегда pointer */
     }
     
     .modal-content {
         padding: 20px;
-        width: 95%;
+        min-width: 280px;
     }
     
-    .modal button {
-        padding: 10px 20px;
-        font-size: 14px;
-        min-width: 100px;
+    /* Увеличиваем область нажатия для мобильных */
+    .option, .empty-cell, button {
+        min-height: 44px; /* Минимальная высота для удобного нажатия */
     }
 }
 
-@media (max-width: 320px) {
-    .options {
-        grid-template-columns: 1fr;
-    }
-    
-    .option {
-        height: 50px;
+/* Планшеты */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        max-width: 500px;
     }
 }
 
-/* Отключение задержки касания на iOS */
-.option {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+/* Анимация для мобильных взаимодействий */
+@keyframes tap-feedback {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+.option:active, .empty-cell:active, button:active {
+    animation: tap-feedback 0.2s ease;
 }
