@@ -1,3 +1,30 @@
+// Fix mobile 100vh bug + safe-area
+function updateVh() {
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+}
+updateVh();
+window.addEventListener('resize', updateVh);
+
+// --- Telegram Fullscreen Integration ---
+let tg = null;
+
+if (window.Telegram && window.Telegram.WebApp) {
+    tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // Попытка включить fullscreen сразу при запуске
+    tg.requestFullscreen();
+
+    // Логирование изменения полноэкранного режима
+    tg.onEvent('fullscreenChanged', (isFs) => {
+        console.log("Telegram fullscreen:", isFs);
+    });
+
+    tg.onEvent('fullscreenFailed', () => {
+        console.warn("⚠ Fullscreen request was rejected");
+    });
+}
+
 class KeyAdvantagesGame {
     constructor() {
         this.currentRound = 0;
@@ -232,6 +259,7 @@ class KeyAdvantagesGame {
                 }
             });
             
+            // Перетаскивание из ячейки обратно в список (удаление)
             cell.addEventListener('dragstart', (e) => {
                 if (e.target.classList.contains('option') && e.target.parentElement === cell) {
                     e.target.classList.add('dragging');
@@ -242,6 +270,7 @@ class KeyAdvantagesGame {
             });
         });
         
+        // Предотвращаем стандартное поведение браузера для перетаскивания
         document.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
@@ -253,6 +282,7 @@ class KeyAdvantagesGame {
             const optionIndex = e.dataTransfer.getData('option-index');
             
             if (type === 'remove' && optionIndex) {
+                // Если перетащили элемент за пределы ячеек, удаляем его из ячейки
                 const emptyCells = document.querySelectorAll('.empty-cell');
                 for (let cell of emptyCells) {
                     const optionInCell = cell.querySelector(`.option[data-option="${optionIndex}"]`);
@@ -269,6 +299,7 @@ class KeyAdvantagesGame {
         const optionsContainer = document.getElementById('options');
         const emptyCells = document.querySelectorAll('.empty-cell');
         
+        // Для мобильных: клик по варианту добавляет его в первую свободную ячейку
         optionsContainer.addEventListener('click', (e) => {
             if (this.isMobile && e.target.classList.contains('option') && 
                 !e.target.classList.contains('used')) {
@@ -276,6 +307,7 @@ class KeyAdvantagesGame {
             }
         });
         
+        // Для мобильных: клик по варианту в ячейке удаляет его
         emptyCells.forEach(cell => {
             cell.addEventListener('click', (e) => {
                 if (this.isMobile && e.target.classList.contains('option')) {
@@ -283,6 +315,7 @@ class KeyAdvantagesGame {
                 }
             });
             
+            // Двойное касание для удаления (дополнительный вариант)
             let tapCount = 0;
             let tapTimer;
             
@@ -326,6 +359,14 @@ class KeyAdvantagesGame {
         optionClone.draggable = true;
         optionClone.style.cursor = this.isMobile ? 'pointer' : 'default';
         optionClone.setAttribute('data-option', optionIndex);
+        
+        // Для десктопной версии фиксируем размеры
+        if (!this.isMobile) {
+            optionClone.style.width = '100%';
+            optionClone.style.height = '100%';
+            optionClone.style.maxWidth = '100%';
+            optionClone.style.maxHeight = '100%';
+        }
         
         // Сохраняем связь между клоном и оригиналом
         this.originalOptionsMap.set(optionClone, option);
