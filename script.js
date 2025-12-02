@@ -131,6 +131,7 @@ class KeyAdvantagesGame {
     }
 
     init() {
+        console.log('Игра инициализируется...');
         this.initializeTelegram();
         this.generateRoundsOrder();
         this.setupEventListeners();
@@ -143,17 +144,21 @@ class KeyAdvantagesGame {
             this.tg.expand();
             this.tg.enableClosingConfirmation();
             this.user = this.tg.initDataUnsafe?.user;
+            console.log('Telegram Web App инициализирован');
         } catch (error) {
             this.tg = null;
             this.user = { id: 'test', username: 'Тестовый пользователь' };
+            console.log('Telegram Web App не найден, используется тестовый режим');
         }
     }
 
     generateRoundsOrder() {
         this.roundsOrder = [...Array(10).keys()].sort(() => Math.random() - 0.5);
+        console.log('Порядок раундов:', this.roundsOrder);
     }
 
     setupEventListeners() {
+        console.log('Настройка обработчиков событий...');
         document.getElementById('next-btn').addEventListener('click', () => this.nextRound());
         document.getElementById('ok-btn').addEventListener('click', () => {
             this.showLeadersFromGame = true;
@@ -172,6 +177,7 @@ class KeyAdvantagesGame {
     }
 
     setupDragAndDrop() {
+        console.log('Настройка перетаскивания...');
         const optionsContainer = document.getElementById('options');
         const emptyCells = document.querySelectorAll('.empty-cell');
 
@@ -402,9 +408,12 @@ class KeyAdvantagesGame {
     }
 
     startRound(roundIndex) {
+        console.log('Начало раунда:', roundIndex);
         this.currentRound = roundIndex;
         const actualRound = this.roundsOrder[roundIndex];
         const roundData = this.roundsData[actualRound];
+        
+        console.log('Данные раунда:', roundData);
         
         document.getElementById('current-round').textContent = roundIndex + 1;
         document.getElementById('round-description').textContent = roundData.description;
@@ -418,8 +427,22 @@ class KeyAdvantagesGame {
     }
 
     updateOptions(options) {
+        console.log('Обновление вариантов:', options);
         const optionsContainer = document.getElementById('options');
+        
+        if (!optionsContainer) {
+            console.error('Контейнер options не найден!');
+            return;
+        }
+        
+        // Очищаем контейнер
         optionsContainer.innerHTML = '';
+        
+        // Проверяем, что options является массивом
+        if (!Array.isArray(options)) {
+            console.error('options не является массивом:', options);
+            return;
+        }
         
         options.forEach((option, index) => {
             const optionElement = document.createElement('div');
@@ -439,9 +462,11 @@ class KeyAdvantagesGame {
         });
         
         this.originalOptionsMap.clear();
+        console.log('Варианты обновлены, создано элементов:', options.length);
     }
 
     clearEmptyCells() {
+        console.log('Очистка ячеек...');
         const emptyCells = document.querySelectorAll('.empty-cell');
         emptyCells.forEach(cell => {
             cell.classList.remove('filled');
@@ -542,6 +567,7 @@ class KeyAdvantagesGame {
     }
 
     nextRound() {
+        console.log('Переход к следующему раунду...');
         this.saveRoundAnswers();
         
         const nextBtn = document.getElementById('next-btn');
@@ -581,6 +607,8 @@ class KeyAdvantagesGame {
         if (allCorrect && userAnswers.length === 3) {
             this.perfectRounds++;
         }
+        
+        console.log(`Очки за раунд: ${roundScore}, Всего очков: ${this.totalScore}`);
     }
 
     saveRoundAnswers() {
@@ -595,6 +623,7 @@ class KeyAdvantagesGame {
         });
         
         this.userAnswers[this.currentRound] = currentAnswers;
+        console.log('Сохраненные ответы:', currentAnswers);
     }
 
     calculateScore() {
@@ -619,6 +648,7 @@ class KeyAdvantagesGame {
     }
 
     async finishGame() {
+        console.log('Завершение игры...');
         const perfectRounds = this.calculateScore();
         
         // Выбираем мотивационную фразу
@@ -670,6 +700,7 @@ class KeyAdvantagesGame {
 
     async saveResult() {
         try {
+            console.log('Сохранение результата...');
             const response = await fetch('/api/save-result', {
                 method: 'POST',
                 headers: {
@@ -683,7 +714,8 @@ class KeyAdvantagesGame {
                 })
             });
             
-            await response.json();
+            const result = await response.json();
+            console.log('Результат сохранения:', result);
         } catch (error) {
             console.error('Ошибка сохранения результата:', error);
         }
@@ -765,6 +797,7 @@ class KeyAdvantagesGame {
     }
 
     restartGame() {
+        console.log('Перезапуск игры...');
         this.currentRound = 0;
         this.score = 0;
         this.totalScore = 0;
@@ -781,655 +814,13 @@ class KeyAdvantagesGame {
     }
 }
 
+// Запуск игры при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM загружен, запуск игры...');
     new KeyAdvantagesGame();
 });
-[file content end]* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #4583ed 0%, #b8c7e0 100%);
-    min-height: 100vh;
-    padding: 20px;
-    touch-action: manipulation;
-}
-
-.container {
-    max-width: 450px;
-    margin: 0 auto;
-}
-
-.header {
-    text-align: center;
-    margin-bottom: 20px;
-    color: white;
-}
-
-.header h1 {
-    font-size: 26px;
-    margin-bottom: 10px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-}
-
-.round-counter {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    background: rgba(255, 255, 255, 0.2);
-    display: inline-block;
-    padding: 5px 15px;
-    border-radius: 20px;
-}
-
-.round-description {
-    background: #fff3cd;
-    border: 2px solid #ffeaa7;
-    border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 30px; /* Увеличен отступ снизу */
-    text-align: center;
-    font-weight: bold;
-    color: #856404;
-    font-size: 17px;
-    line-height: 1.5;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.game-area {
-    background: white;
-    border-radius: 18px;
-    padding: 25px;
-    margin-bottom: 25px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.25);
-}
-
-.empty-cells {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 40px; /* Увеличен отступ между ячейками и вариантами */
-}
-
-.empty-cell {
-    aspect-ratio: 1;
-    border: 3px dashed #ccc;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f8f9fa;
-    transition: all 0.3s ease;
-    position: relative;
-    padding: 6px; /* Уменьшены внутренние отступы */
-    overflow: hidden; /* Скрываем выходящий за границы текст */
-}
-
-.empty-cell.hovered {
-    border-color: #667eea;
-    background: #f0f4ff;
-    transform: translateY(-3px);
-}
-
-.empty-cell.filled {
-    border-style: solid;
-    border-color: #667eea;
-    background: #e8f4ff;
-}
-
-/* Стили для вариантов внутри ячеек */
-.empty-cell .option {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 8px; /* Уменьшены отступы внутри ячейки */
-    font-size: 13px; /* Уменьшен шрифт для ячейки */
-    font-weight: 500;
-    line-height: 1.2; /* Уменьшен межстрочный интервал */
-    word-break: break-word;
-    overflow: hidden;
-    border: none;
-    background: transparent;
-    cursor: grab;
-    border-radius: 8px;
-    margin: 0;
-    white-space: normal;
-    overflow-wrap: break-word;
-}
-
-.options {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-}
-
-.option {
-    aspect-ratio: 1;
-    border: 2px solid #e9ecef;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    cursor: grab;
-    font-size: 14px;
-    text-align: center;
-    padding: 12px;
-    transition: all 0.2s ease;
-    user-select: none;
-    word-break: break-word;
-    line-height: 1.3;
-    min-height: 0; /* Предотвращает растягивание */
-    overflow: hidden;
-}
-
-.option:hover {
-    border-color: #667eea;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.25);
-}
-
-.option.dragging {
-    opacity: 0.8;
-    cursor: grabbing;
-    transform: scale(0.98);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    z-index: 1000;
-    position: relative;
-}
-
-.option.used {
-    opacity: 0.4;
-    cursor: not-allowed;
-    background: #f8f9fa;
-    border-color: #e9ecef;
-    transform: none;
-    box-shadow: none;
-}
-
-.option.used:hover {
-    border-color: #e9ecef;
-    transform: none;
-    box-shadow: none;
-}
-
-.empty-cell .option:hover {
-    border-color: #ff6b6b;
-    background: #fff5f5;
-}
-
-/* Стиль для правильных, но не выбранных вариантов */
-.option.correct-unselected {
-    background: #d4edda !important;
-    border-color: #28a745 !important;
-    border-width: 2px !important;
-    color: #155724;
-    font-weight: bold;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
-    70% { box-shadow: 0 0 0 6px rgba(40, 167, 69, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
-}
-
-.next-btn {
-    width: 100%;
-    padding: 18px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-bottom: 15px;
-    font-weight: bold;
-    box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
-}
-
-.next-btn:hover {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4290 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
-}
-
-.next-btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.leaders-btn {
-    width: 100%;
-    padding: 18px;
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: bold;
-    box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
-}
-
-.leaders-btn:hover {
-    background: linear-gradient(135deg, #218838 0%, #1ba87e 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.5);
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    z-index: 1000;
-    backdrop-filter: blur(8px);
-}
-
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 35px;
-    border-radius: 18px;
-    text-align: center;
-    min-width: 350px;
-    max-width: 90%;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-    animation: modalAppear 0.4s ease;
-}
-
-@keyframes modalAppear {
-    from { 
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.9);
-    }
-    to { 
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
-.modal h2 {
-    margin-bottom: 25px;
-    color: #333;
-    font-size: 28px;
-}
-
-#results-text {
-    font-size: 19px;
-    margin-bottom: 25px;
-}
-
-#leaders-table {
-    margin: 25px 0;
-    text-align: left;
-    min-height: 250px;
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid #eee;
-    border-radius: 10px;
-    padding: 10px;
-}
-
-.leader-row {
-    padding: 12px 18px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.2s ease;
-}
-
-.leader-row:hover {
-    background-color: #f8f9fa;
-    transform: translateX(5px);
-}
-
-.leader-row.top-3 {
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-    font-weight: bold;
-    border-radius: 8px;
-    margin: 8px 0;
-    border-left: 4px solid #ffc107;
-}
-
-.leader-position {
-    font-size: 17px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.leader-date {
-    color: #666;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.modal button {
-    padding: 12px 25px;
-    margin: 8px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: bold;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    min-width: 140px;
-}
-
-.modal button:hover {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4290 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
-}
-
-#restart-btn {
-    background: linear-gradient(135deg, #ffc107 0%, #ff9900 100%);
-    color: #212529;
-}
-
-#restart-btn:hover {
-    background: linear-gradient(135deg, #e0a800 0%, #e68900 100%);
-}
-
-/* Стили для результатов */
-.results-container {
-    text-align: center;
-    padding: 30px 0;
-}
-
-.score-result {
-    font-size: 36px;
-    font-weight: bold;
-    margin: 20px 0 30px;
-    padding: 22px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px;
-    color: white;
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-}
-
-.motivation {
-    font-size: 22px;
-    margin: 30px 0;
-    padding: 20px 0;
-    text-align: center;
-    line-height: 1.6;
-    font-weight: 600;
-    color: #333;
-    border-top: 2px dashed #ddd;
-    border-bottom: 2px dashed #ddd;
-}
-
-.success-message {
-    font-size: 24px;
-    color: #28a745;
-    margin-top: 30px;
-    padding: 22px;
-    background-color: #d4edda;
-    border-radius: 12px;
-    border-left: 5px solid #28a745;
-    font-weight: bold;
-    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.25);
-    line-height: 1.5;
-}
-
-.no-leaders {
-    text-align: center;
-    color: #6c757d;
-    font-style: italic;
-    padding: 30px;
-    font-size: 18px;
-}
-
-/* Стили для кликабельных ссылок в таблице лидеров */
-.leader-link {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: bold;
-    transition: all 0.2s ease;
-    padding: 3px 8px;
-    border-radius: 4px;
-    border-bottom: 2px solid transparent;
-}
-
-.leader-link:hover {
-    color: #5a6fd8;
-    background-color: rgba(102, 126, 234, 0.1);
-    border-bottom: 2px solid #5a6fd8;
-}
-
-.leader-link:active {
-    color: #4a5fd8;
-    transform: scale(0.98);
-}
-
-/* Анимации для подсветки ответов */
-@keyframes highlightCorrect {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-@keyframes highlightIncorrect {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-8px); }
-    75% { transform: translateX(8px); }
-    100% { transform: translateX(0); }
-}
-
-.empty-cell[style*="background-color: #d4edda"] {
-    animation: highlightCorrect 0.6s ease;
-}
-
-.empty-cell[style*="background-color: #f8d7da"] {
-    animation: highlightIncorrect 0.6s ease;
-}
-
-@keyframes tap-feedback {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
-}
-
-.option:active, .empty-cell:active, button:active {
-    animation: tap-feedback 0.2s ease;
-}
-
-/* Адаптивность для мобильных устройств */
-@media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-    
-    .container {
-        max-width: 100%;
-    }
-    
-    .header h1 {
-        font-size: 22px;
-    }
-    
-    .round-counter {
-        font-size: 16px;
-        padding: 4px 12px;
-    }
-    
-    .round-description {
-        font-size: 15px;
-        padding: 15px;
-        margin-bottom: 25px;
-    }
-    
-    .game-area {
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .empty-cell, .option {
-        aspect-ratio: 1;
-        padding: 8px;
-    }
-    
-    .empty-cell .option {
-        padding: 6px;
-        font-size: 12px;
-        line-height: 1.1;
-    }
-    
-    .modal-content {
-        padding: 25px;
-        min-width: 300px;
-        max-width: 95%;
-    }
-    
-    .score-result {
-        font-size: 28px;
-        padding: 18px;
-        margin: 15px 0 25px;
-    }
-    
-    .motivation {
-        font-size: 18px;
-        padding: 18px 0;
-        margin: 25px 0;
-    }
-    
-    .success-message {
-        font-size: 20px;
-        padding: 18px;
-        margin-top: 25px;
-    }
-    
-    .leader-row {
-        padding: 10px 15px;
-        font-size: 15px;
-    }
-    
-    .leader-link {
-        font-size: 15px;
-    }
-    
-    .leader-date {
-        font-size: 13px;
-    }
-    
-    .next-btn, .leaders-btn {
-        padding: 16px;
-        font-size: 17px;
-    }
-    
-    .modal button {
-        padding: 10px 20px;
-        min-width: 120px;
-        font-size: 15px;
-        margin: 6px;
-    }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-    .container {
-        max-width: 500px;
-    }
-    
-    .score-result {
-        font-size: 32px;
-        padding: 20px;
-    }
-}
-
-/* Для старых браузеров, которые не поддерживают aspect-ratio */
-@supports not (aspect-ratio: 1) {
-    .empty-cell {
-        height: 0;
-        padding-bottom: 100%;
-        position: relative;
-    }
-    
-    .empty-cell > * {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-    }
-    
-    .option {
-        height: 0;
-        padding-bottom: 100%;
-        position: relative;
-    }
-    
-    .option > * {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-    }
-}
-
-/* Полоса прокрутки для таблицы лидеров */
-#leaders-table::-webkit-scrollbar {
-    width: 8px;
-}
-
-#leaders-table::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-#leaders-table::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 10px;
-}
-
-#leaders-table::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4290 100%);
-}
-
-/* Улучшения для лучшей доступности */
-button:focus,
-.option:focus,
-.leader-link:focus {
-    outline: 3px solid #667eea;
-    outline-offset: 3px;
-}
-
-/* Для скринридеров */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-[file content end]
+// Также запускаем при полной загрузке страницы на всякий случай
+window.addEventListener('load', () => {
+    console.log('Страница полностью загружена');
+});
