@@ -11,7 +11,7 @@ class KeyAdvantagesGame {
         this.showLeadersFromGame = false;
         this.originalOptionsMap = new Map(); // Карта для отслеживания оригинальных элементов
         
-        // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ (исправлены кавычки)
+        // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ
         this.roundsData = [
             {
                 description: "Укажите 3 главных преимущества Tecno Spark 40",
@@ -399,8 +399,6 @@ class KeyAdvantagesGame {
         const nextBtn = document.getElementById('next-btn');
         nextBtn.textContent = roundIndex === 9 ? 'Завершить' : 'Следующий раунд';
         nextBtn.disabled = false; // Разблокируем кнопку
-        
-        console.log('Раунд', roundIndex + 1, 'загружен. Опции:', roundData.options);
     }
 
     updateOptions(options) {
@@ -408,14 +406,6 @@ class KeyAdvantagesGame {
         
         // Очищаем контейнер
         optionsContainer.innerHTML = '';
-        
-        console.log('Обновление опций:', options);
-        
-        // Проверяем, что options - это массив
-        if (!Array.isArray(options)) {
-            console.error('options не является массивом:', options);
-            return;
-        }
         
         // Создаем элементы для каждой опции
         options.forEach((option, index) => {
@@ -437,8 +427,6 @@ class KeyAdvantagesGame {
         
         // Очищаем карту при обновлении вариантов
         this.originalOptionsMap.clear();
-        
-        console.log('Создано опций:', optionsContainer.children.length);
     }
 
     clearEmptyCells() {
@@ -533,7 +521,7 @@ class KeyAdvantagesGame {
         // Вычисляем очки за текущий раунд
         this.calculateRoundScore();
         
-        // Увеличиваем задержку до 4 секунд перед переходом
+        // Уменьшаем задержку до 3 секунд перед переходом
         setTimeout(() => {
             if (this.currentRound === 9) {
                 this.finishGame();
@@ -541,7 +529,7 @@ class KeyAdvantagesGame {
                 this.clearHighlighting();
                 this.startRound(this.currentRound + 1);
             }
-        }, 4000); // 4 секунды задержки
+        }, 3000); // 3 секунды задержки
     }
 
     // Метод для подсчета очков за текущий раунд
@@ -632,7 +620,7 @@ class KeyAdvantagesGame {
             motivationClass = 'motivation-encourage';
         }
         
-        // Формируем HTML для результатов
+        // Формируем HTML для результатов (без рамки у мотивационной фразы)
         let resultsHTML = `
             <div class="results-container">
                 <div class="main-result">
@@ -741,8 +729,23 @@ class KeyAdvantagesGame {
             else if (index === 1) medal = '🥈';
             else if (index === 2) medal = '🥉';
             
+            // Определяем, нужно ли делать никнейм кликабельным
+            let usernameElement = leader.username;
+            
+            // Если username содержит "@" или не содержит пробелов, делаем его кликабельным
+            if (leader.username && leader.username !== 'Анонимный игрок' && 
+                (leader.username.includes('@') || !leader.username.includes(' '))) {
+                
+                // Если username начинается с @, убираем его для ссылки
+                const cleanUsername = leader.username.startsWith('@') 
+                    ? leader.username.substring(1) 
+                    : leader.username;
+                
+                usernameElement = `<a href="https://t.me/${cleanUsername}" target="_blank" class="leader-link">${leader.username}</a>`;
+            }
+            
             row.innerHTML = `
-                <span class="leader-position">${medal} ${index + 1}. ${leader.username}</span>
+                <span class="leader-position">${medal} ${index + 1}. ${usernameElement}</span>
                 <span class="leader-date">${formattedDate}</span>
             `;
             
