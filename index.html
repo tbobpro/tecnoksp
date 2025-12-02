@@ -3,11 +3,15 @@
 <head>
     <title>Ключевые преимущества</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- ВАЖНО: viewport-fit=cover чтобы env(safe-area-inset-*) работал -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+    <!-- ФИКС: spacer сверху, который подстраивается под safe-area -->
+    <div class="safe-area-top" aria-hidden="true"></div>
+
     <div class="container">
         <div class="header">
             <h1>Ключевые преимущества</h1>
