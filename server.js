@@ -212,7 +212,13 @@ app.get('/api/leaders', (req, res) => {
         month: '2-digit',
         year: 'numeric'
       }),
-      originalDate: result.date
+      originalDate: result.date,
+      // Добавляем признак, можно ли сделать ссылку
+      canBeLinked: result.username && 
+                   result.username !== 'Аноним' && 
+                   result.username !== 'Анонимный игрок' &&
+                   !result.username.includes(' ') &&
+                   result.username.length > 3
     }));
     
     res.json(formattedResults);
@@ -233,7 +239,8 @@ app.get('/api/stats', (req, res) => {
     const stats = {
       totalPlayers: results.length,
       latestPlayer: results.length > 0 ? results[results.length - 1] : null,
-      firstPlayer: results.length > 0 ? results[0] : null
+      firstPlayer: results.length > 0 ? results[0] : null,
+      lastUpdated: new Date().toISOString()
     };
     
     res.json({
@@ -255,8 +262,37 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    memory: process.memoryUsage()
+    memory: process.memoryUsage(),
+    nodeVersion: process.version
   });
+});
+
+// API для очистки таблицы лидеров (только для админа в разработке)
+app.delete('/api/clear-leaders', (req, res) => {
+  try {
+    // Проверяем секретный ключ (в продакшене нужно использовать нормальную аутентификацию)
+    const { secret } = req.query;
+    if (secret !== 'admin123') {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Доступ запрещен' 
+      });
+    }
+    
+    fs.writeFileSync(RESULTS_FILE, JSON.stringify([], null, 2), 'utf8');
+    console.log('🗑️ Таблица лидеров очищена администратором');
+    
+    res.json({ 
+      success: true, 
+      message: 'Таблица лидеров очищена' 
+    });
+  } catch (error) {
+    console.error('❌ Ошибка при очистке таблицы лидеров:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка очистки таблицы лидеров'
+    });
+  }
 });
 
 // Главная страница
@@ -264,11 +300,139 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Страница таблицы лидеров (альтернативный вид)
+app.get('/leaders', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Таблица лидеров - Ключевые преимущества</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: linear-gradient(135deg, #4583ed 0%, #b8c7e0 100%);
+          min-height: 100vh;
+          padding: 20px;
+          text-align: center;
+        }
+        .container {
+          max-width: 800px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 15px;
+          padding: 30px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+          color: #333;
+          margin-bottom: 30px;
+        }
+        .leaderboard {
+          text-align: left;
+          margin: 20px 0;
+        }
+        .leader-row {
+          padding: 12px 15px;
+          border-bottom: 1px solid #eee;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .leader-row.top-3 {
+          background: #fff3cd;
+          font-weight: bold;
+        }
+        .leader-position {
+          font-size: 18px;
+        }
+        .leader-date {
+          color: #666;
+          font-size: 14px;
+        }
+        a {
+          color: #667eea;
+          text-decoration: none;
+        }
+        a:hover {
+          text-decoration: underline;
+        }
+        .back-btn {
+          display: inline-block;
+          margin-top: 20px;
+          padding: 10px 20px;
+          background: #667eea;
+          color: white;
+          border-radius: 5px;
+          text-decoration: none;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🏆 Таблица лидеров</h1>
+        <div id="leaders-table"></div>
+        <a href="/" class="back-btn">Вернуться к игре</a>
+      </div>
+      <script>
+        fetch('/api/leaders')
+          .then(response => response.json())
+          .then(leaders => {
+            const leadersTable = document.getElementById('leaders-table');
+            if (leaders.length === 0) {
+              leadersTable.innerHTML = '<p>Пока нет лидеров. Будьте первым!</p>';
+              return;
+            }
+            
+            leaders.forEach((leader, index) => {
+              const row = document.createElement('div');
+              row.className = \`leader-row \${index < 3 ? 'top-3' : ''}\`;
+              
+              let medal = '';
+              if (index === 0) medal = '🥇';
+              else if (index === 1) medal = '🥈';
+              else if (index === 2) medal = '🥉';
+              
+              let usernameElement = leader.username;
+              if (leader.canBeLinked) {
+                const cleanUsername = leader.username.startsWith('@') 
+                  ? leader.username.substring(1) 
+                  : leader.username;
+                usernameElement = \`<a href="https://t.me/\${cleanUsername}" target="_blank">\${leader.username}</a>\`;
+              }
+              
+              row.innerHTML = \`
+                <span class="leader-position">\${medal} \${index + 1}. \${usernameElement}</span>
+                <span class="leader-date">\${leader.date}</span>
+              \`;
+              leadersTable.appendChild(row);
+            });
+          })
+          .catch(error => {
+            console.error('Ошибка:', error);
+            document.getElementById('leaders-table').innerHTML = 
+              '<p>Ошибка загрузки таблицы лидеров</p>';
+          });
+      </script>
+    </body>
+    </html>
+  `);
+});
+
 // Страница 404 для неизвестных маршрутов
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    error: 'Страница не найдена'
+    error: 'Страница не найдена',
+    availableEndpoints: [
+      'GET /',
+      'GET /leaders',
+      'POST /api/save-result',
+      'GET /api/leaders',
+      'GET /api/stats',
+      'GET /api/health'
+    ]
   });
 });
 
@@ -277,7 +441,8 @@ app.use((err, req, res, next) => {
   console.error('❌ Необработанная ошибка:', err);
   res.status(500).json({
     success: false,
-    error: 'Внутренняя ошибка сервера'
+    error: 'Внутренняя ошибка сервера',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 
@@ -291,6 +456,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌐 Локальный адрес: http://localhost:${PORT}`);
   console.log(`🌐 Внешний адрес: http://91.201.40.70:${PORT}`);
   console.log(`📊 API лидеров: http://91.201.40.70:${PORT}/api/leaders`);
+  console.log(`🏆 Страница лидеров: http://91.201.40.70:${PORT}/leaders`);
   console.log(`🩺 Проверка здоровья: http://91.201.40.70:${PORT}/api/health\n`);
 });
 
