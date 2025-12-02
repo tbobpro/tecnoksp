@@ -2,16 +2,35 @@ class KeyAdvantagesGame {
     constructor() {
         this.currentRound = 0;
         this.score = 0;
-        this.totalScore = 0; // Общий счет за все правильные ответы
-        this.perfectRounds = 0; // Количество полностью правильных раундов
+        this.totalScore = 0;
+        this.perfectRounds = 0;
         this.roundsOrder = [];
         this.userAnswers = [];
         this.isDragging = false;
         this.isMobile = this.checkMobile();
         this.showLeadersFromGame = false;
-        this.originalOptionsMap = new Map(); // Карта для отслеживания оригинальных элементов
+        this.originalOptionsMap = new Map();
         
-        // ОБНОВЛЕННЫЕ ДАННЫЕ С ОПИСАНИЕМ РАУНДОВ
+        // Мотивационные фразы
+        this.motivationPhrases = {
+            // 3 фразы для 1-10 очков
+            lowScore: [
+                "Ты только начинаешь! Попробуй ещё раз! 💫",
+                "Хороший старт! Продолжай тренироваться! ✨",
+                "Уже что-то получается! Не сдавайся! 💪"
+            ],
+            // 5 фраз для 11-30 очков (включая "Ты превзошёл все ожидания!")
+            highScore: [
+                "Отличный результат! Ты знаешь продукцию TECNO! 👍",
+                "Великолепно! Твой энтузиазм впечатляет! 🔥",
+                "Ты превзошёл все ожидания! 🎯",
+                "Потрясающе! Ты настоящий фанат TECNO! 🚀",
+                "Браво! Такие знания достойны уважения! 👏"
+            ],
+            // Для идеального результата (30 очков)
+            perfectScore: "🔥 Ты превзошёл все ожидания! Абсолютный чемпион TECNO! 🏆"
+        };
+        
         this.roundsData = [
             {
                 description: "Укажите 3 главных преимущества Tecno Spark 40",
@@ -124,9 +143,7 @@ class KeyAdvantagesGame {
             this.tg.expand();
             this.tg.enableClosingConfirmation();
             this.user = this.tg.initDataUnsafe?.user;
-            console.log('Telegram Web App инициализирован');
         } catch (error) {
-            console.log('Telegram Web App не доступен, работаем в браузере');
             this.tg = null;
             this.user = { id: 'test', username: 'Тестовый пользователь' };
         }
@@ -134,7 +151,6 @@ class KeyAdvantagesGame {
 
     generateRoundsOrder() {
         this.roundsOrder = [...Array(10).keys()].sort(() => Math.random() - 0.5);
-        console.log('Порядок раундов:', this.roundsOrder);
     }
 
     setupEventListeners() {
@@ -198,7 +214,6 @@ class KeyAdvantagesGame {
                     const originalOptions = document.querySelectorAll(`.option[data-option="${optionIndex}"]`);
                     let originalOption = null;
                     
-                    // Находим оригинальный вариант (не использованный)
                     for (let op of originalOptions) {
                         if (!op.classList.contains('used') && !op.parentElement.classList.contains('empty-cell')) {
                             originalOption = op;
@@ -210,7 +225,6 @@ class KeyAdvantagesGame {
                         this.addOptionToCell(originalOption, cell);
                     }
                 } else if (type === 'remove') {
-                    // Удаление варианта из ячейки
                     const optionInCell = cell.querySelector('.option');
                     if (optionInCell) {
                         this.removeOptionFromCell(optionInCell);
@@ -218,7 +232,6 @@ class KeyAdvantagesGame {
                 }
             });
             
-            // Настраиваем перетаскивание для удаления вариантов из ячеек
             cell.addEventListener('dragstart', (e) => {
                 if (e.target.classList.contains('option') && e.target.parentElement === cell) {
                     e.target.classList.add('dragging');
@@ -229,7 +242,6 @@ class KeyAdvantagesGame {
             });
         });
         
-        // Обработчик для удаления варианта перетаскиванием в любое место
         document.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
@@ -241,7 +253,6 @@ class KeyAdvantagesGame {
             const optionIndex = e.dataTransfer.getData('option-index');
             
             if (type === 'remove' && optionIndex) {
-                // Ищем вариант в ячейках по индексу
                 const emptyCells = document.querySelectorAll('.empty-cell');
                 for (let cell of emptyCells) {
                     const optionInCell = cell.querySelector(`.option[data-option="${optionIndex}"]`);
@@ -258,7 +269,6 @@ class KeyAdvantagesGame {
         const optionsContainer = document.getElementById('options');
         const emptyCells = document.querySelectorAll('.empty-cell');
         
-        // Клик по варианту для добавления
         optionsContainer.addEventListener('click', (e) => {
             if (this.isMobile && e.target.classList.contains('option') && 
                 !e.target.classList.contains('used')) {
@@ -266,7 +276,6 @@ class KeyAdvantagesGame {
             }
         });
         
-        // Клик по варианту в ячейке для удаления
         emptyCells.forEach(cell => {
             cell.addEventListener('click', (e) => {
                 if (this.isMobile && e.target.classList.contains('option')) {
@@ -274,7 +283,6 @@ class KeyAdvantagesGame {
                 }
             });
             
-            // Двойной тап для быстрого удаления
             let tapCount = 0;
             let tapTimer;
             
@@ -337,10 +345,8 @@ class KeyAdvantagesGame {
         const cell = optionClone.parentElement;
         if (!cell || !cell.classList.contains('empty-cell')) return;
         
-        // Находим оригинальный вариант по карте
         let originalOption = this.originalOptionsMap.get(optionClone);
         
-        // Если не нашли по карте, ищем по индексу
         if (!originalOption) {
             const optionIndex = optionClone.getAttribute('data-option');
             const options = document.querySelectorAll(`.option[data-option="${optionIndex}"]`);
@@ -353,21 +359,17 @@ class KeyAdvantagesGame {
             }
         }
         
-        // Удаляем из карты
         this.originalOptionsMap.delete(optionClone);
         
-        // Возвращаем оригинальный вариант в доступное состояние
         if (originalOption) {
             originalOption.classList.remove('used');
             originalOption.style.opacity = '1';
             originalOption.style.cursor = this.isMobile ? 'pointer' : 'grab';
         }
         
-        // Удаляем клон из ячейки
         cell.removeChild(optionClone);
         cell.classList.remove('filled');
         
-        // Обновляем ответы
         this.saveRoundAnswers();
     }
     
@@ -398,16 +400,13 @@ class KeyAdvantagesGame {
         
         const nextBtn = document.getElementById('next-btn');
         nextBtn.textContent = roundIndex === 9 ? 'Завершить' : 'Следующий раунд';
-        nextBtn.disabled = false; // Разблокируем кнопку
+        nextBtn.disabled = false;
     }
 
     updateOptions(options) {
         const optionsContainer = document.getElementById('options');
-        
-        // Очищаем контейнер
         optionsContainer.innerHTML = '';
         
-        // Создаем элементы для каждой опции
         options.forEach((option, index) => {
             const optionElement = document.createElement('div');
             optionElement.className = 'option';
@@ -425,7 +424,6 @@ class KeyAdvantagesGame {
             optionsContainer.appendChild(optionElement);
         });
         
-        // Очищаем карту при обновлении вариантов
         this.originalOptionsMap.clear();
     }
 
@@ -434,14 +432,12 @@ class KeyAdvantagesGame {
         emptyCells.forEach(cell => {
             cell.classList.remove('filled');
             cell.innerHTML = '';
-            // Сбрасываем стили подсветки
             cell.style.backgroundColor = '';
             cell.style.borderColor = '';
             cell.style.borderWidth = '';
             cell.style.borderStyle = '';
         });
 
-        // Сбрасываем все варианты в исходное состояние
         const options = document.querySelectorAll('.option');
         options.forEach(option => {
             option.classList.remove('used');
@@ -450,13 +446,13 @@ class KeyAdvantagesGame {
             option.style.borderColor = '';
             option.style.color = '';
             option.style.cursor = this.isMobile ? 'pointer' : 'grab';
+            option.classList.remove('correct-unselected');
         });
         
-        // Очищаем карту
         this.originalOptionsMap.clear();
     }
 
-    // Метод для подсветки ответов в текущем раунде (ТОЛЬКО в ячейках)
+    // Метод для подсветки ответов в текущем раунде
     highlightAnswers() {
         const actualRound = this.roundsOrder[this.currentRound];
         const correctAnswers = this.roundsData[actualRound].correct;
@@ -464,14 +460,14 @@ class KeyAdvantagesGame {
         
         const emptyCells = document.querySelectorAll('.empty-cell');
         
+        // Подсвечиваем варианты в ячейках
         emptyCells.forEach((cell) => {
             const option = cell.querySelector('.option');
             if (option) {
                 const answerIndex = parseInt(option.getAttribute('data-option'));
                 
-                // Проверяем, является ли выбранный ответ правильным
                 if (correctAnswers.includes(answerIndex)) {
-                    // Правильный ответ - зеленый
+                    // Правильный ответ в ячейке - зеленый
                     cell.style.backgroundColor = '#d4edda';
                     cell.style.borderColor = '#28a745';
                     cell.style.borderWidth = '2px';
@@ -479,7 +475,7 @@ class KeyAdvantagesGame {
                     option.style.color = '#155724';
                     option.style.fontWeight = 'bold';
                 } else {
-                    // Неправильный ответ - красный
+                    // Неправильный ответ в ячейке - красный
                     cell.style.backgroundColor = '#f8d7da';
                     cell.style.borderColor = '#dc3545';
                     cell.style.borderWidth = '2px';
@@ -487,6 +483,21 @@ class KeyAdvantagesGame {
                     option.style.color = '#721c24';
                     option.style.fontWeight = 'bold';
                 }
+            }
+        });
+        
+        // Подсвечиваем правильные, но не выбранные варианты в списке
+        const options = document.querySelectorAll('#options .option');
+        options.forEach(option => {
+            const optionIndex = parseInt(option.getAttribute('data-option'));
+            
+            // Если вариант правильный И не был выбран пользователем
+            if (correctAnswers.includes(optionIndex) && !userAnswers.includes(optionIndex)) {
+                // Подсвечиваем светло-зеленым (как подсказка)
+                option.style.backgroundColor = '#d4edda';
+                option.style.borderColor = '#28a745';
+                option.style.borderWidth = '2px';
+                option.classList.add('correct-unselected');
             }
         });
     }
@@ -506,22 +517,25 @@ class KeyAdvantagesGame {
                 option.style.fontWeight = '';
             }
         });
+        
+        const options = document.querySelectorAll('.option');
+        options.forEach(option => {
+            option.style.backgroundColor = '';
+            option.style.borderColor = '';
+            option.style.borderWidth = '';
+            option.classList.remove('correct-unselected');
+        });
     }
 
     nextRound() {
         this.saveRoundAnswers();
         
-        // Блокируем кнопку, чтобы не нажимали несколько раз
         const nextBtn = document.getElementById('next-btn');
         nextBtn.disabled = true;
         
-        // Подсвечиваем ответы текущего раунда (только в ячейках)
         this.highlightAnswers();
-        
-        // Вычисляем очки за текущий раунд
         this.calculateRoundScore();
         
-        // Уменьшаем задержку до 3 секунд перед переходом
         setTimeout(() => {
             if (this.currentRound === 9) {
                 this.finishGame();
@@ -529,10 +543,9 @@ class KeyAdvantagesGame {
                 this.clearHighlighting();
                 this.startRound(this.currentRound + 1);
             }
-        }, 3000); // 3 секунды задержки
+        }, 3000);
     }
 
-    // Метод для подсчета очков за текущий раунд
     calculateRoundScore() {
         const actualRound = this.roundsOrder[this.currentRound];
         const correctAnswers = this.roundsData[actualRound].correct;
@@ -551,13 +564,9 @@ class KeyAdvantagesGame {
         
         this.totalScore += roundScore;
         
-        // Проверяем, полностью ли правильный раунд
         if (allCorrect && userAnswers.length === 3) {
             this.perfectRounds++;
-            console.log(`Раунд ${this.currentRound + 1} пройден полностью!`);
         }
-        
-        console.log(`Раунд ${this.currentRound + 1}: ${roundScore} очков, всего: ${this.totalScore}`);
     }
 
     saveRoundAnswers() {
@@ -575,7 +584,6 @@ class KeyAdvantagesGame {
     }
 
     calculateScore() {
-        // Считаем только полностью правильные раунды (для таблицы лидеров)
         let perfectRounds = 0;
         
         this.userAnswers.forEach((answer, roundIndex) => {
@@ -599,40 +607,35 @@ class KeyAdvantagesGame {
     async finishGame() {
         const perfectRounds = this.calculateScore();
         
-        // Определяем мотивационную фразу на основе общего счета
+        // Выбираем мотивационную фразу
         let motivationPhrase = '';
-        let motivationClass = '';
         
-        if (this.totalScore >= 25) {
-            motivationPhrase = '🔥 Великолепный результат! Вы настоящий эксперт TECNO! 🏆';
-            motivationClass = 'motivation-excellent';
-        } else if (this.totalScore >= 20) {
-            motivationPhrase = '🎯 Отличный результат! Вы хорошо знаете продукцию TECNO! 👍';
-            motivationClass = 'motivation-great';
-        } else if (this.totalScore >= 15) {
-            motivationPhrase = '✨ Хороший результат! Продолжайте изучать продукцию TECNO! 💪';
-            motivationClass = 'motivation-good';
-        } else if (this.totalScore >= 10) {
-            motivationPhrase = '🌟 Неплохо! Есть куда стремиться, продолжайте тренироваться!';
-            motivationClass = 'motivation-average';
+        if (this.totalScore === 30) {
+            // Идеальный результат (30 очков)
+            motivationPhrase = this.motivationPhrases.perfectScore;
+        } else if (this.totalScore >= 11) {
+            // Высокий результат (11-29 очков)
+            const randomIndex = Math.floor(Math.random() * this.motivationPhrases.highScore.length);
+            motivationPhrase = this.motivationPhrases.highScore[randomIndex];
+        } else if (this.totalScore >= 1) {
+            // Низкий результат (1-10 очков)
+            const randomIndex = Math.floor(Math.random() * this.motivationPhrases.lowScore.length);
+            motivationPhrase = this.motivationPhrases.lowScore[randomIndex];
         } else {
-            motivationPhrase = '💫 Попробуйте ещё раз! Вы обязательно улучшите результат!';
-            motivationClass = 'motivation-encourage';
+            // 0 очков
+            motivationPhrase = "Ничего страшного! Попробуй ещё раз! 💪";
         }
         
-        // Формируем HTML для результатов (без рамки у мотивационной фразы)
+        // Формируем HTML для результатов (без строки о полностью пройденных раундах)
         let resultsHTML = `
             <div class="results-container">
-                <div class="main-result">
-                    Полностью пройдено раундов: <strong>${perfectRounds} из 10</strong>
-                </div>
                 <div class="score-result">
                     Вы набрали: <strong>${this.totalScore} очков</strong>
                 </div>
-                <div class="motivation ${motivationClass}">${motivationPhrase}</div>
+                <div class="motivation">${motivationPhrase}</div>
         `;
         
-        // Если все 10 раундов пройдены полностью - показываем специальное сообщение
+        // Если все 10 раундов пройдены полностью (30 очков)
         if (perfectRounds === 10) {
             resultsHTML += `
                 <div class="success-message">
@@ -661,13 +664,12 @@ class KeyAdvantagesGame {
                 body: JSON.stringify({
                     userId: this.user?.id || 'anonymous',
                     username: this.user?.username || 'Анонимный игрок',
-                    score: 10, // Всегда 10 для таблицы лидеров
+                    score: 10,
                     date: new Date().toISOString()
                 })
             });
             
-            const result = await response.json();
-            console.log('Результат сохранен:', result);
+            await response.json();
         } catch (error) {
             console.error('Ошибка сохранения результата:', error);
         }
@@ -723,20 +725,15 @@ class KeyAdvantagesGame {
             const date = new Date(leader.originalDate || leader.date);
             const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
             
-            // Добавляем медали для топ-3
             let medal = '';
             if (index === 0) medal = '🥇';
             else if (index === 1) medal = '🥈';
             else if (index === 2) medal = '🥉';
             
-            // Определяем, нужно ли делать никнейм кликабельным
             let usernameElement = leader.username;
-            
-            // Если username содержит "@" или не содержит пробелов, делаем его кликабельным
             if (leader.username && leader.username !== 'Анонимный игрок' && 
                 (leader.username.includes('@') || !leader.username.includes(' '))) {
                 
-                // Если username начинается с @, убираем его для ссылки
                 const cleanUsername = leader.username.startsWith('@') 
                     ? leader.username.substring(1) 
                     : leader.username;
@@ -770,13 +767,6 @@ class KeyAdvantagesGame {
     }
 }
 
-// Проверяем, что DOM загружен перед инициализацией игры
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM загружен, инициализируем игру');
-        new KeyAdvantagesGame();
-    });
-} else {
-    console.log('DOM уже загружен, инициализируем игру');
+document.addEventListener('DOMContentLoaded', () => {
     new KeyAdvantagesGame();
-}
+});
