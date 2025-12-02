@@ -216,6 +216,7 @@ body {
     max-width: 90%;
     max-height: 80vh;
     overflow-y: auto;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
 }
 
 .modal h2 {
@@ -231,18 +232,41 @@ body {
 #leaders-table {
     margin: 20px 0;
     text-align: left;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .leader-row {
-    padding: 10px;
+    padding: 10px 15px;
     border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s ease;
 }
 
-.leader-row.top-5 {
-    background: #fff3cd;
+.leader-row:hover {
+    background-color: #f8f9fa;
+}
+
+.leader-row.top-3 {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
     font-weight: bold;
+    border-radius: 5px;
+    margin: 5px 0;
+}
+
+.leader-position {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.leader-date {
+    color: #666;
+    font-size: 14px;
 }
 
 .modal button {
@@ -254,6 +278,7 @@ body {
     background: #667eea;
     color: white;
     font-weight: bold;
+    transition: background 0.3s ease;
 }
 
 .modal button:hover {
@@ -269,6 +294,143 @@ body {
     background: #e0a800;
 }
 
+/* Стили для результатов */
+.results-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.main-result {
+    font-size: 22px;
+    margin-bottom: 15px;
+    color: #333;
+    padding: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+}
+
+.score-result {
+    font-size: 28px;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    color: white;
+}
+
+.motivation {
+    font-size: 18px;
+    margin: 20px 0;
+    padding: 15px 0;
+    text-align: center;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+/* Цвета для разных уровней мотивации */
+.motivation-excellent {
+    color: #28a745;
+}
+
+.motivation-great {
+    color: #17a2b8;
+}
+
+.motivation-good {
+    color: #ffc107;
+}
+
+.motivation-average {
+    color: #6c757d;
+}
+
+.motivation-encourage {
+    color: #dc3545;
+}
+
+.success-message {
+    font-size: 20px;
+    color: #28a745;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #d4edda;
+    border-radius: 10px;
+    border-left: 4px solid #28a745;
+    font-weight: bold;
+}
+
+.no-leaders {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Стили для кликабельных ссылок в таблице лидеров */
+.leader-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.leader-link:hover {
+    color: #5a6fd8;
+    text-decoration: underline;
+    background-color: rgba(102, 126, 234, 0.1);
+}
+
+.leader-link:active {
+    color: #4a5fd8;
+    transform: scale(0.98);
+}
+
+/* Анимации */
+@keyframes highlightCorrect {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes highlightIncorrect {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+    100% { transform: translateX(0); }
+}
+
+.empty-cell[style*="background-color: #d4edda"] {
+    animation: highlightCorrect 0.5s ease;
+}
+
+.empty-cell[style*="background-color: #f8d7da"] {
+    animation: highlightIncorrect 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes tap-feedback {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+.option:active, .empty-cell:active, button:active {
+    animation: tap-feedback 0.2s ease;
+}
+
+/* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -306,10 +468,38 @@ body {
     .modal-content {
         padding: 20px;
         min-width: 280px;
+        max-width: 95%;
     }
     
     .option, .empty-cell, button {
         min-height: 44px;
+    }
+    
+    .main-result {
+        font-size: 18px;
+    }
+    
+    .score-result {
+        font-size: 22px;
+        padding: 12px;
+    }
+    
+    .motivation {
+        font-size: 16px;
+        padding: 10px 0;
+    }
+    
+    .leader-row {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    .leader-link {
+        font-size: 14px;
+    }
+    
+    .leader-date {
+        font-size: 12px;
     }
 }
 
@@ -319,80 +509,111 @@ body {
     }
 }
 
-@keyframes tap-feedback {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
+/* Полоса прокрутки для таблицы лидеров */
+#leaders-table::-webkit-scrollbar {
+    width: 6px;
 }
 
-.option:active, .empty-cell:active, button:active {
-    animation: tap-feedback 0.2s ease;
+#leaders-table::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
 }
 
+#leaders-table::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
 
-/* Стили для результатов */
-.results-container {
+#leaders-table::-webkit-scrollbar-thumb:hover {
+    background: #5a6fd8;
+}
+
+/* Улучшения для лучшей доступности */
+button:focus,
+.option:focus,
+.leader-link:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Для скринридеров */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Загрузочный индикатор */
+.loading-indicator {
+    display: none;
     text-align: center;
-    padding: 20px 0;
-}
-
-.main-result {
-    font-size: 22px;
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.score-result {
-    font-size: 28px;
-    font-weight: bold;
+    padding: 20px;
     color: #667eea;
-    margin-bottom: 20px;
-    padding: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 16px;
 }
 
-.motivation {
-    font-size: 18px;
-    color: #28a745;
-    margin: 20px 0;
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    border-left: 4px solid #28a745;
+.loading-indicator::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #667eea;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
 }
 
-.success-message {
-    font-size: 20px;
-    color: #ffc107;
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #fff3cd;
-    border-radius: 10px;
-    border: 2px solid #ffc107;
-    font-weight: bold;
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-/* Анимация для подсветки */
-@keyframes highlightCorrect {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-@keyframes highlightIncorrect {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-    100% { transform: translateX(0); }
-}
-
-.empty-cell[style*="background-color: #d4edda"] {
-    animation: highlightCorrect 0.5s ease;
-}
-
-.empty-cell[style*="background-color: #f8d7da"] {
-    animation: highlightIncorrect 0.5s ease;
+/* Темная тема поддержка */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+    }
+    
+    .game-area,
+    .modal-content {
+        background: #2d2d2d;
+        color: #ffffff;
+    }
+    
+    .round-description {
+        background: #333;
+        border-color: #555;
+        color: #ffd54f;
+    }
+    
+    .empty-cell {
+        background: #3d3d3d;
+        border-color: #555;
+    }
+    
+    .option {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #ffffff;
+    }
+    
+    .leader-row:hover {
+        background-color: #3d3d3d;
+    }
+    
+    .modal h2 {
+        color: #ffffff;
+    }
+    
+    .main-result {
+        background: #3d3d3d;
+        color: #ffffff;
+    }
 }
