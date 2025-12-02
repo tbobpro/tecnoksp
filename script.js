@@ -1,30 +1,90 @@
-// Fix mobile 100vh bug + safe-area
-function updateVh() {
-    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-}
-updateVh();
-window.addEventListener('resize', updateVh);
+// ================================
+// Mobile safe-area + real 100vh fix
+// ================================
 
-// --- Telegram Fullscreen Integration ---
+function updateVhAndSafeTop() {
+    // --vh: реальное 1vh в пикселях
+    const vhUnit = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vhUnit}px`);
+
+    // Попытка измерить env(safe-area-inset-top) — создаём временный элемент
+    let safeTop = 0;
+    try {
+        const probe = document.createElement('div');
+        probe.style.position = 'fixed';
+        probe.style.top = '0';
+        probe.style.left = '0';
+        probe.style.width = '0';
+        probe.style.height = 'env(safe-area-inset-top)';
+        probe.style.pointerEvents = 'none';
+        document.body.appendChild(probe);
+        const rect = probe.getBoundingClientRect();
+        safeTop = rect.height || 0;
+        document.body.removeChild(probe);
+    } catch (e) {
+        safeTop = 0;
+    }
+
+    // Если safeTop равен 0 (например, Android без выреза), приближённо вычислим статус-бар как разница между screen.height и innerHeight
+    if (!safeTop) {
+        try {
+            const approx = Math.max(0, (window.screen.height - window.innerHeight));
+            // Обрезаем слишком большие значения, оставляем разумное значение (обычно 20..60px)
+            safeTop = approx > 120 ? 0 : approx;
+        } catch (e) {
+            safeTop = 0;
+        }
+    }
+
+    // Устанавливаем CSS-переменную --safe-top (в px)
+    document.documentElement.style.setProperty('--safe-top', `${safeTop}px`);
+    // Если у вас есть spacer .safe-area-top, оно автоматически подхватит высоту
+    const spacer = document.querySelector('.safe-area-top');
+    if (spacer) spacer.style.height = `${safeTop}px`;
+}
+
+// Инициализация сразу
+updateVhAndSafeTop();
+
+// Обновляем на изменение размеров/ориентации
+window.addEventListener('resize', () => {
+    // дебаунс для resize
+    clearTimeout(window._vhResizeTimer);
+    window._vhResizeTimer = setTimeout(updateVhAndSafeTop, 120);
+});
+
+window.addEventListener('orientationchange', () => {
+    setTimeout(updateVhAndSafeTop, 200);
+});
+
+
+// ======================================================
+//  Telegram Fullscreen Auto-Start Integration
+// ======================================================
 let tg = null;
 
 if (window.Telegram && window.Telegram.WebApp) {
     tg = window.Telegram.WebApp;
     tg.ready();
 
-    // Попытка включить fullscreen сразу при запуске
-    tg.requestFullscreen();
+    // Пробуем открыть fullscreen сразу
+    // Некоторые клиенты/версии могут отвергнуть первый запрос, поэтому повторяем
+    try { tg.requestFullscreen(); } catch(e){ /* noop */ }
+    setTimeout(() => { try { tg.requestFullscreen(); } catch(e){ } }, 250);
+    setTimeout(() => { try { tg.requestFullscreen(); } catch(e){ } }, 700);
 
-    // Логирование изменения полноэкранного режима
     tg.onEvent('fullscreenChanged', (isFs) => {
-        console.log("Telegram fullscreen:", isFs);
+        console.log("Telegram Fullscreen:", isFs);
+        // После смены состояния fullscreen - пересчитаем высоту
+        setTimeout(updateVhAndSafeTop, 120);
     });
 
     tg.onEvent('fullscreenFailed', () => {
         console.warn("⚠ Fullscreen request was rejected");
+        // попробуем ещё раз позже
+        setTimeout(() => { try { tg.requestFullscreen(); } catch(e){ } }, 800);
     });
 }
-
 class KeyAdvantagesGame {
     constructor() {
         this.currentRound = 0;
