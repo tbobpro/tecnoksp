@@ -430,43 +430,43 @@ class KeyAdvantagesGame {
     }
 
     updateOptions(options) {
-        console.log('Обновление вариантов:', options);
-        const optionsContainer = document.getElementById('options');
-        
-        if (!optionsContainer) {
-            console.error('Контейнер options не найден!');
-            return;
-        }
-        
-        // Очищаем контейнер
-        optionsContainer.innerHTML = '';
-        
-        // Проверяем, что options является массивом
-        if (!Array.isArray(options)) {
-            console.error('options не является массивом:', options);
-            return;
-        }
-        
-        options.forEach((option, index) => {
-            const optionElement = document.createElement('div');
-            optionElement.className = 'option';
-            optionElement.draggable = !this.isMobile;
-            optionElement.textContent = option;
-            optionElement.setAttribute('data-option', index);
-            
-            if (this.isMobile) {
-                optionElement.style.cursor = 'pointer';
-                optionElement.style.touchAction = 'manipulation';
-            } else {
-                optionElement.style.cursor = 'grab';
-            }
-            
-            optionsContainer.appendChild(optionElement);
-        });
-        
-        this.originalOptionsMap.clear();
-        console.log('Варианты обновлены, создано элементов:', options.length);
+    console.log('Обновление вариантов:', options);
+    const optionsContainer = document.getElementById('options');
+    
+    if (!optionsContainer) {
+        console.error('Контейнер options не найден!');
+        return;
     }
+    
+    // Очищаем контейнер
+    optionsContainer.innerHTML = '';
+    
+    // Проверяем, что options является массивом
+    if (!Array.isArray(options)) {
+        console.error('options не является массивом:', options);
+        return;
+    }
+    
+    options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.className = 'option';
+        optionElement.draggable = !this.isMobile;
+        optionElement.textContent = option;
+        optionElement.setAttribute('data-option', index);
+        
+        if (this.isMobile) {
+            optionElement.style.cursor = 'pointer';
+            optionElement.style.touchAction = 'manipulation';
+        } else {
+            optionElement.style.cursor = 'grab';
+        }
+        
+        optionsContainer.appendChild(optionElement);
+    });
+    
+    this.originalOptionsMap.clear();
+    console.log('Варианты обновлены, создано элементов:', options.length);
+}
 
     clearEmptyCells() {
         console.log('Очистка ячеек...');
