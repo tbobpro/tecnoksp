@@ -139,19 +139,22 @@ class KeyAdvantagesGame {
     }
 
     initializeTelegram() {
-        try {
-            this.tg = window.Telegram.WebApp;
-            this.tg.expand();
-            this.tg.enableClosingConfirmation();
-            this.user = this.tg.initDataUnsafe?.user;
-            console.log('Telegram Web App инициализирован');
-        } catch (error) {
-            this.tg = null;
-            this.user = { id: 'test', username: 'Тестовый пользователь' };
-            console.log('Telegram Web App не найден, используется тестовый режим');
-        }
+    try {
+        this.tg = window.Telegram.WebApp;
+        this.tg.expand();
+        this.tg.enableClosingConfirmation();
+        this.user = this.tg.initDataUnsafe?.user;
+        
+        // Получаем URL аватарки пользователя
+        this.userPhotoUrl = this.user?.photo_url || null;
+        console.log('Telegram Web App инициализирован, фото:', this.userPhotoUrl);
+    } catch (error) {
+        this.tg = null;
+        this.user = { id: 'test', username: 'Тестовый пользователь' };
+        this.userPhotoUrl = null;
+        console.log('Telegram Web App не найден, используется тестовый режим');
     }
-
+}
     generateRoundsOrder() {
         this.roundsOrder = [...Array(10).keys()].sort(() => Math.random() - 0.5);
         console.log('Порядок раундов:', this.roundsOrder);
@@ -699,27 +702,28 @@ class KeyAdvantagesGame {
     }
 
     async saveResult() {
-        try {
-            console.log('Сохранение результата...');
-            const response = await fetch('/api/save-result', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: this.user?.id || 'anonymous',
-                    username: this.user?.username || 'Анонимный игрок',
-                    score: 10,
-                    date: new Date().toISOString()
-                })
-            });
-            
-            const result = await response.json();
-            console.log('Результат сохранения:', result);
-        } catch (error) {
-            console.error('Ошибка сохранения результата:', error);
-        }
+    try {
+        console.log('Сохранение результата...');
+        const response = await fetch('/api/save-result', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: this.user?.id || 'anonymous',
+                username: this.user?.username || 'Анонимный игрок',
+                photoUrl: this.userPhotoUrl, // Добавляем URL аватарки
+                score: 10,
+                date: new Date().toISOString()
+            })
+        });
+        
+        const result = await response.json();
+        console.log('Результат сохранения:', result);
+    } catch (error) {
+        console.error('Ошибка сохранения результата:', error);
     }
+}
 
     async showLeaders() {
         document.getElementById('results-modal').style.display = 'none';
@@ -755,63 +759,95 @@ class KeyAdvantagesGame {
     }
 
     displayLeaders(leaders) {
-        const leadersTable = document.getElementById('leaders-table');
+    const leadersTable = document.getElementById('leaders-table');
+    
+    if (leaders.length === 0) {
+        leadersTable.innerHTML = '<p class="no-leaders">Пока нет лидеров. Будьте первым!</p>';
+        return;
+    }
+    
+    leadersTable.innerHTML = '';
+    
+    leaders.forEach((leader, index) => {
+        const row = document.createElement('div');
+        row.className = `leader-row ${index < 3 ? 'top-3' : ''}`;
         
-        if (leaders.length === 0) {
-            leadersTable.innerHTML = '<p class="no-leaders">Пока нет лидеров. Будьте первым!</p>';
-            return;
+        const date = new Date(leader.originalDate || leader.date);
+        const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+        
+        let medal = '';
+        if (index === 0) medal = '🥇';
+        else if (index === 1) medal = '🥈';
+        else if (index === 2) medal = '🥉';
+        
+        let usernameElement = leader.username;
+        if (leader.username && leader.username !== 'Анонимный игрок' && 
+            (leader.username.includes('@') || !leader.username.includes(' '))) {
+            
+            const cleanUsername = leader.username.startsWith('@') 
+                ? leader.username.substring(1) 
+                : leader.username;
+            
+            usernameElement = `<a href="https://t.me/${cleanUsername}" target="_blank" class="leader-link">${leader.username}</a>`;
         }
         
-        leadersTable.innerHTML = '';
-        
-        leaders.forEach((leader, index) => {
-            const row = document.createElement('div');
-            row.className = `leader-row ${index < 3 ? 'top-3' : ''}`;
-            
-            const date = new Date(leader.originalDate || leader.date);
-            const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-            
-            let medal = '';
-            if (index === 0) medal = '🥇';
-            else if (index === 1) medal = '🥈';
-            else if (index === 2) medal = '🥉';
-            
-            let usernameElement = leader.username;
-            if (leader.username && leader.username !== 'Анонимный игрок' && 
-                (leader.username.includes('@') || !leader.username.includes(' '))) {
-                
-                const cleanUsername = leader.username.startsWith('@') 
-                    ? leader.username.substring(1) 
-                    : leader.username;
-                
-                usernameElement = `<a href="https://t.me/${cleanUsername}" target="_blank" class="leader-link">${leader.username}</a>`;
-            }
-            
-            row.innerHTML = `
-                <span class="leader-position">${medal} ${index + 1}. ${usernameElement}</span>
-                <span class="leader-date">${formattedDate}</span>
+        // Добавляем аватарку, если она есть
+        let avatarHTML = '';
+        if (leader.photoUrl) {
+            // Добавляем fallback на случай ошибки загрузки изображения
+            avatarHTML = `
+                <div class="leader-avatar">
+                    <img src="${leader.photoUrl}" 
+                         alt="${leader.username}" 
+                         onerror="this.style.display='none'; this.parentElement.classList.add('no-photo')">
+                </div>
             `;
-            
-            leadersTable.appendChild(row);
-        });
-    }
+        } else {
+            // Если нет аватарки, показываем инициалы или иконку
+            avatarHTML = `
+                <div class="leader-avatar no-photo">
+                    <div class="avatar-placeholder">
+                        ${this.getUserInitials(leader.username)}
+                    </div>
+                </div>
+            `;
+        }
+        
+        row.innerHTML = `
+            <div class="leader-info">
+                ${avatarHTML}
+                <div class="leader-text">
+                    <div class="leader-position">
+                        ${medal} ${index + 1}. ${usernameElement}
+                    </div>
+                    <div class="leader-date">${formattedDate}</div>
+                </div>
+            </div>
+        `;
+        
+        leadersTable.appendChild(row);
+    });
+}
 
-    restartGame() {
-        console.log('Перезапуск игры...');
-        this.currentRound = 0;
-        this.score = 0;
-        this.totalScore = 0;
-        this.perfectRounds = 0;
-        this.userAnswers = [];
-        this.generateRoundsOrder();
-        
-        document.getElementById('leaders-modal').style.display = 'none';
-        document.getElementById('results-modal').style.display = 'none';
-        document.getElementById('restart-btn').style.display = 'none';
-        
-        this.clearHighlighting();
-        this.startRound(0);
+// Добавляем метод для получения инициалов из имени
+getUserInitials(username) {
+    if (!username) return '?';
+    
+    // Убираем @ если есть
+    const cleanName = username.replace('@', '');
+    
+    // Берем первые две буквы
+    const words = cleanName.split(' ').filter(word => word.length > 0);
+    
+    if (words.length >= 2) {
+        // Если есть имя и фамилия, берем первые буквы
+        return (words[0][0] + words[1][0]).toUpperCase();
+    } else if (words.length === 1) {
+        // Если только одно слово, берем первые две буквы
+        return words[0].substring(0, 2).toUpperCase();
     }
+    
+    return cleanName.substring(0, 2).toUpperCase();
 }
 
 // Запуск игры при загрузке страницы
