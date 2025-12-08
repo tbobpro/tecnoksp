@@ -646,3 +646,51 @@ button:focus,
     white-space: nowrap;
     border: 0;
 }
+
+/* Стили для аватарок в таблице лидеров */
+.leader-row {
+    padding: 12px 18px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.leader-row:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.leader-row.top-3 {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    font-weight: bold;
+    border-radius: 8px;
+    margin: 8px 0;
+    border-left: 4px solid #ffc107;
+}
+
+.leader-position {
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.leader-date {
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .leader-row {
+        padding: 10px 15px;
+    }
+    
+    .leader-row img {
+        width: 40px;
+        height: 40px;
+    }
+}
