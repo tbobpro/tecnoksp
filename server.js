@@ -114,13 +114,14 @@ function writeResults(results) {
 
 // Проверка валидности данных результата
 function isValidResult(data) {
-  return data && 
-         typeof data.userId === 'string' && 
-         data.userId.trim() !== '' &&
-         typeof data.username === 'string' &&
-         data.username.trim() !== '' &&
-         data.score === 10 && // Сохраняем только тех, кто набрал 10 очков (все раунды идеально)
-         !isNaN(Date.parse(data.date));
+    return data && 
+           typeof data.userId === 'string' && 
+           data.userId.trim() !== '' &&
+           typeof data.username === 'string' &&
+           data.username.trim() !== '' &&
+           data.score === 10 &&
+           !isNaN(Date.parse(data.date));
+    // photoUrl может быть null или строкой, поэтому не проверяем строго
 }
 
 // Middleware для логирования запросов
@@ -132,105 +133,108 @@ app.use((req, res, next) => {
 
 // API для сохранения результата
 app.post('/api/save-result', (req, res) => {
-  try {
-    const { userId, username, score } = req.body;
-    
-    // Валидация данных
-    if (!userId || !username || score !== 10) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Некорректные данные. Сохраняются только результаты с 10 очками.' 
-      });
+    try {
+        const { userId, username, score, photoUrl } = req.body; // Добавлен photoUrl
+        
+        // Валидация данных
+        if (!userId || !username || score !== 10) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Некорректные данные. Сохраняются только результаты с 10 очками.' 
+            });
+        }
+        
+        const results = readResults();
+        
+        // Создаем новый результат
+        const newResult = {
+            userId: String(userId).trim(),
+            username: String(username).trim(),
+            photoUrl: photoUrl || null, // Сохраняем URL аватарки
+            score: 10,
+            date: new Date().toISOString(),
+            timestamp: Date.now()
+        };
+        
+        // Проверяем валидность
+        if (!isValidResult(newResult)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Некорректные данные результата' 
+            });
+        }
+        
+        // Удаляем старый результат этого пользователя, если есть
+        const userIndex = results.findIndex(r => r.userId === newResult.userId);
+        if (userIndex !== -1) {
+            console.log(`🔄 Обновление результата пользователя ${newResult.username}`);
+            results.splice(userIndex, 1);
+        } else {
+            console.log(`➕ Добавление нового пользователя ${newResult.username}`);
+        }
+        
+        // Добавляем новый результат
+        results.push(newResult);
+        
+        // Сохраняем и сортируем
+        const success = writeResults(results);
+        
+        if (success) {
+            res.json({ 
+                success: true, 
+                message: 'Результат сохранен в таблице лидеров!',
+                position: results.findIndex(r => r.userId === newResult.userId) + 1
+            });
+        } else {
+            res.status(500).json({ 
+                success: false, 
+                error: 'Ошибка сохранения результатов' 
+            });
+        }
+    } catch (error) {
+        console.error('❌ Ошибка при сохранении результата:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Внутренняя ошибка сервера' 
+        });
     }
-    
-    const results = readResults();
-    
-    // Создаем новый результат
-    const newResult = {
-      userId: String(userId).trim(),
-      username: String(username).trim(),
-      score: 10,
-      date: new Date().toISOString(),
-      timestamp: Date.now()
-    };
-    
-    // Проверяем валидность
-    if (!isValidResult(newResult)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Некорректные данные результата' 
-      });
-    }
-    
-    // Удаляем старый результат этого пользователя, если есть
-    const userIndex = results.findIndex(r => r.userId === newResult.userId);
-    if (userIndex !== -1) {
-      console.log(`🔄 Обновление результата пользователя ${newResult.username}`);
-      results.splice(userIndex, 1);
-    } else {
-      console.log(`➕ Добавление нового пользователя ${newResult.username}`);
-    }
-    
-    // Добавляем новый результат
-    results.push(newResult);
-    
-    // Сохраняем и сортируем
-    const success = writeResults(results);
-    
-    if (success) {
-      res.json({ 
-        success: true, 
-        message: 'Результат сохранен в таблице лидеров!',
-        position: results.findIndex(r => r.userId === newResult.userId) + 1
-      });
-    } else {
-      res.status(500).json({ 
-        success: false, 
-        error: 'Ошибка сохранения результатов' 
-      });
-    }
-  } catch (error) {
-    console.error('❌ Ошибка при сохранении результата:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Внутренняя ошибка сервера' 
-    });
-  }
 });
 
 // API для получения лидеров
 app.get('/api/leaders', (req, res) => {
-  try {
-    const results = readResults();
-    
-    // Форматируем даты для отображения
-    const formattedResults = results.map((result, index) => ({
-      position: index + 1,
-      username: result.username,
-      date: new Date(result.date).toLocaleDateString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }),
-      originalDate: result.date,
-      // Добавляем признак, можно ли сделать ссылку
-      canBeLinked: result.username && 
-                   result.username !== 'Аноним' && 
-                   result.username !== 'Анонимный игрок' &&
-                   !result.username.includes(' ') &&
-                   result.username.length > 3
-    }));
-    
-    res.json(formattedResults);
-  } catch (error) {
-    console.error('❌ Ошибка при получении лидеров:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Ошибка загрузки таблицы лидеров',
-      leaders: []
-    });
-  }
+    try {
+        const results = readResults();
+        
+        // Форматируем даты для отображения
+        const formattedResults = results.map((result, index) => ({
+            position: index + 1,
+            username: result.username,
+            photoUrl: result.photoUrl, // Добавляем photoUrl
+            date: new Date(result.date).toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }),
+            originalDate: result.date,
+            // Добавляем признак, можно ли сделать ссылку
+            canBeLinked: result.username && 
+                       result.username !== 'Аноним' && 
+                       result.username !== 'Анонимный игрок' &&
+                       !result.username.includes(' ') &&
+                       result.username.length > 3
+        }));
+        
+        res.json(formattedResults);
+    } catch (error) {
+        console.error('❌ Ошибка при получении лидеров:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Ошибка загрузки таблицы лидеров',
+            leaders: []
+        });
+    }
 });
+
 
 // API для получения статистики
 app.get('/api/stats', (req, res) => {
