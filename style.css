@@ -646,3 +646,111 @@ button:focus,
     white-space: nowrap;
     border: 0;
 }
+
+
+/* Добавляем в конец файла style.css: */
+
+/* Стили для аватарок в таблице лидеров */
+.leader-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.leader-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.leader-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.leader-avatar.no-photo img {
+    display: none;
+}
+
+.leader-avatar.no-photo .avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.leader-text {
+    flex-grow: 1;
+}
+
+.leader-position {
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.leader-date {
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* Для топ-3 добавляем эффект свечения к аватарке */
+.leader-row.top-3 .leader-avatar {
+    border-color: #ffc107;
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
+}
+
+/* Анимация появления аватарок */
+@keyframes avatarAppear {
+    from { 
+        opacity: 0;
+        transform: scale(0.8) rotate(-10deg);
+    }
+    to { 
+        opacity: 1;
+        transform: scale(1) rotate(0);
+    }
+}
+
+.leader-avatar {
+    animation: avatarAppear 0.5s ease;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .leader-avatar {
+        width: 40px;
+        height: 40px;
+        border-width: 2px;
+    }
+    
+    .leader-avatar.no-photo .avatar-placeholder {
+        font-size: 14px;
+    }
+    
+    .leader-info {
+        gap: 10px;
+    }
+    
+    .leader-position {
+        font-size: 15px;
+    }
+}
