@@ -144,10 +144,25 @@ class KeyAdvantagesGame {
             this.tg.expand();
             this.tg.enableClosingConfirmation();
             this.user = this.tg.initDataUnsafe?.user;
-            console.log('Telegram Web App инициализирован');
+            
+            // Сохраняем фото пользователя, если оно доступно
+            if (this.user) {
+                // В Telegram Web App фото доступно через photo_url
+                if (this.user.photo_url) {
+                    this.userPhotoUrl = this.user.photo_url;
+                    console.log('Фото пользователя доступно:', this.userPhotoUrl);
+                }
+            }
+            
+            console.log('Telegram Web App инициализирован, пользователь:', this.user);
         } catch (error) {
             this.tg = null;
-            this.user = { id: 'test', username: 'Тестовый пользователь' };
+            this.user = { 
+                id: 'test_' + Date.now(), 
+                username: 'Тестовый пользователь',
+                first_name: 'Тестовый'
+            };
+            this.userPhotoUrl = null;
             console.log('Telegram Web App не найден, используется тестовый режим');
         }
     }
@@ -670,7 +685,7 @@ class KeyAdvantagesGame {
             motivationPhrase = "Ничего страшного! Попробуй ещё раз! 💪";
         }
         
-        // Формируем HTML для результатов (без строки о полностью пройденных раундах)
+        // Формируем HTML для результатов
         let resultsHTML = `
             <div class="results-container">
                 <div class="score-result">
@@ -701,23 +716,42 @@ class KeyAdvantagesGame {
     async saveResult() {
         try {
             console.log('Сохранение результата...');
+            
+            // Формируем данные для отправки
+            const resultData = {
+                userId: this.user?.id || 'anonymous',
+                username: this.user?.username || this.user?.first_name || 'Анонимный игрок',
+                score: 10,
+                date: new Date().toISOString()
+            };
+            
+            // Добавляем фото пользователя, если доступно
+            if (this.userPhotoUrl) {
+                resultData.photoUrl = this.userPhotoUrl;
+            }
+            
+            console.log('Отправка данных на сервер:', resultData);
+            
             const response = await fetch('/api/save-result', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    userId: this.user?.id || 'anonymous',
-                    username: this.user?.username || 'Анонимный игрок',
-                    score: 10,
-                    date: new Date().toISOString()
-                })
+                body: JSON.stringify(resultData)
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const result = await response.json();
             console.log('Результат сохранения:', result);
+            
+            return result;
         } catch (error) {
             console.error('Ошибка сохранения результата:', error);
+            // Не прерываем выполнение игры из-за ошибки сохранения
+            return { success: false, error: error.message };
         }
     }
 
@@ -750,14 +784,42 @@ class KeyAdvantagesGame {
     }
 
     async getLeaders() {
-        const response = await fetch('/api/leaders');
-        return await response.json();
+        try {
+            const response = await fetch('/api/leaders');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка получения лидеров:', error);
+            // Возвращаем тестовые данные при ошибке
+            return [
+                {
+                    position: 1,
+                    username: 'tbobpro',
+                    userId: '98617025',
+                    date: '01.12.2025',
+                    originalDate: '2025-12-01T10:57:31.314Z',
+                    photoUrl: null,
+                    canBeLinked: true
+                },
+                {
+                    position: 2,
+                    username: 'psygrandmaster',
+                    userId: '6101610499',
+                    date: '03.12.2025',
+                    originalDate: '2025-12-03T13:18:53.399Z',
+                    photoUrl: null,
+                    canBeLinked: true
+                }
+            ];
+        }
     }
 
     displayLeaders(leaders) {
         const leadersTable = document.getElementById('leaders-table');
         
-        if (leaders.length === 0) {
+        if (!leaders || leaders.length === 0) {
             leadersTable.innerHTML = '<p class="no-leaders">Пока нет лидеров. Будьте первым!</p>';
             return;
         }
@@ -787,9 +849,31 @@ class KeyAdvantagesGame {
                 usernameElement = `<a href="https://t.me/${cleanUsername}" target="_blank" class="leader-link">${leader.username}</a>`;
             }
             
+            // Определяем URL аватарки
+            let avatarUrl = leader.photoUrl;
+            if (!avatarUrl && leader.userId && leader.userId !== 'anonymous') {
+                // Используем DiceBear для генерации аватара на основе userId
+                avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${leader.userId}`;
+            } else if (!avatarUrl) {
+                // Дефолтный аватар
+                avatarUrl = 'https://api.dicebear.com/7.x/avataaars/svg?seed=TECNO';
+            }
+            
             row.innerHTML = `
-                <span class="leader-position">${medal} ${index + 1}. ${usernameElement}</span>
-                <span class="leader-date">${formattedDate}</span>
+                <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                    <div class="leader-avatar-container">
+                        <img src="${avatarUrl}" alt="${leader.username}" class="leader-avatar" 
+                             onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=${leader.userId || 'TECNO'}'">
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="leader-position">
+                            <span class="medal">${medal}</span>
+                            <span class="position-number">${index + 1}.</span>
+                            <span class="leader-name">${usernameElement}</span>
+                        </div>
+                        <div class="leader-date">${formattedDate}</div>
+                    </div>
+                </div>
             `;
             
             leadersTable.appendChild(row);
@@ -807,7 +891,6 @@ class KeyAdvantagesGame {
         
         document.getElementById('leaders-modal').style.display = 'none';
         document.getElementById('results-modal').style.display = 'none';
-        document.getElementById('restart-btn').style.display = 'none';
         
         this.clearHighlighting();
         this.startRound(0);
@@ -817,10 +900,28 @@ class KeyAdvantagesGame {
 // Запуск игры при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM загружен, запуск игры...');
-    new KeyAdvantagesGame();
+    
+    // Проверяем, есть ли Telegram Web App
+    if (window.Telegram && window.Telegram.WebApp) {
+        console.log('Telegram Web App обнаружен');
+        // Инициализируем игру
+        window.game = new KeyAdvantagesGame();
+    } else {
+        console.log('Telegram Web App не обнаружен, запускаем в standalone режиме');
+        // Запускаем игру в обычном режиме
+        window.game = new KeyAdvantagesGame();
+    }
 });
 
 // Также запускаем при полной загрузке страницы на всякий случай
 window.addEventListener('load', () => {
     console.log('Страница полностью загружена');
+    
+    // Добавляем обработчик ошибок для изображений аватарок
+    document.addEventListener('error', (e) => {
+        if (e.target.classList && e.target.classList.contains('leader-avatar')) {
+            console.log('Ошибка загрузки аватарки, заменяем на дефолтную');
+            e.target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=TECNO';
+        }
+    }, true);
 });
