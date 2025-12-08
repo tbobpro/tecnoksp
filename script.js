@@ -726,32 +726,49 @@ class KeyAdvantagesGame {
 }
 
     async showLeaders() {
-        document.getElementById('results-modal').style.display = 'none';
+    document.getElementById('results-modal').style.display = 'none';
+    
+    try {
+        const leaders = await this.getLeaders();
+        this.displayLeaders(leaders);
+        document.getElementById('leaders-modal').style.display = 'block';
         
-        try {
-            const leaders = await this.getLeaders();
-            this.displayLeaders(leaders);
-            document.getElementById('leaders-modal').style.display = 'block';
-            
-            const restartBtn = document.getElementById('restart-btn');
-            if (this.showLeadersFromGame) {
-                restartBtn.style.display = 'inline-block';
-            } else {
-                restartBtn.style.display = 'none';
+        const restartBtn = document.getElementById('restart-btn');
+        if (this.showLeadersFromGame) {
+            restartBtn.style.display = 'inline-block';
+        } else {
+            restartBtn.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки таблицы лидеров:', error);
+        
+        // Показываем тестовые данные, если сервер не отвечает
+        const testLeaders = [
+            {
+                username: 'Игрок 1',
+                photoUrl: null,
+                date: new Date().toISOString(),
+                originalDate: new Date().toISOString()
+            },
+            {
+                username: 'Игрок 2',
+                photoUrl: null,
+                date: new Date(Date.now() - 86400000).toISOString(),
+                originalDate: new Date(Date.now() - 86400000).toISOString()
             }
-        } catch (error) {
-            console.error('Ошибка загрузки таблицы лидеров:', error);
-            this.displayLeaders([]);
-            document.getElementById('leaders-modal').style.display = 'block';
-            
-            const restartBtn = document.getElementById('restart-btn');
-            if (this.showLeadersFromGame) {
-                restartBtn.style.display = 'inline-block';
-            } else {
-                restartBtn.style.display = 'none';
-            }
+        ];
+        
+        this.displayLeaders(testLeaders);
+        document.getElementById('leaders-modal').style.display = 'block';
+        
+        const restartBtn = document.getElementById('restart-btn');
+        if (this.showLeadersFromGame) {
+            restartBtn.style.display = 'inline-block';
+        } else {
+            restartBtn.style.display = 'none';
         }
     }
+}
 
     async getLeaders() {
         const response = await fetch('/api/leaders');
