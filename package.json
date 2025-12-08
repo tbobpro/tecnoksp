@@ -1,21 +1,59 @@
 {
-  "name": "telegram-key-advantages-game",
-  "version": "1.0.0",
-  "description": "Игра Ключевые преимущества для Telegram",
+  "name": "tecnoksp-game",
+  "version": "3.0.0",
+  "description": "Игра Ключевые преимущества TECNO с Telegram ботом и аватарками в таблице лидеров",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "start:bot": "node bot.js",
+    "dev:bot": "nodemon bot.js",
+    "start:all": "concurrently \"npm run dev\" \"npm run dev:bot\"",
+    "prod:all": "pm2 start ecosystem.config.js",
+    "stop:all": "pm2 stop ecosystem.config.js",
+    "restart:all": "pm2 restart ecosystem.config.js",
+    "logs": "pm2 logs",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-
-    "dependencies": {
+  "keywords": [
+    "telegram",
+    "game",
+    "webapp",
+    "quiz",
+    "tecnoksp",
+    "inline-bot",
+    "leaderboard"
+  ],
+  "author": "TECNO KSP",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tecnoksp/advantages-game.git"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "helmet": "^7.0.0"
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "telegraf": "^4.12.2",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "node-cron": "^3.0.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "concurrently": "^8.2.2",
+    "pm2": "^5.3.0"
   },
-  "keywords": ["telegram", "game", "webapp"],
-  "author": "Your Name",
-  "license": "MIT"
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
 }
